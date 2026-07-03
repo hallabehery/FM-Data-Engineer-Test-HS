@@ -1,0 +1,512 @@
+{
+  "export": {
+    "schemaVersion": "1.3.0",
+    "generatedAt": "2026-06-16T00:00:00Z",
+    "entity": "group",
+    "recordCount": 13,
+    "naturalKey": "groupId"
+  },
+  "result": {
+    "page": {
+      "number": 1,
+      "size": 13,
+      "totalPages": 1
+    },
+    "groups": [
+      {
+        "groupId": "167898894567",
+        "profile": {
+          "displayName": "Payment One",
+          "description": "Payment One is a Gold-tier money service business group operating under the MSB/PSP pod, headquartered in Ireland. The group oversees multiple licensed and service entities across its corporate structure.",
+          "lifecycle": {
+            "status": {
+              "code": "ACTIVE",
+              "active": true
+            },
+            "createdOn": "2024-01-18"
+          }
+        },
+        "segmentation": {
+          "pod": "MSB/PSP",
+          "vertical": "MSB",
+          "industry": "Money Service Business",
+          "commercialTier": "Gold"
+        },
+        "attributes": [
+          {
+            "name": "risk_level",
+            "value": "Low",
+            "valueType": "string"
+          },
+          {
+            "name": "country_of_incorporation",
+            "value": {
+              "label": "Ireland",
+              "iso2": "IE"
+            },
+            "valueType": "object"
+          }
+        ],
+        "_links": {
+          "self": "/groups/167898894567"
+        }
+      },
+      {
+        "groupId": "167986897142",
+        "profile": {
+          "displayName": "Remitance Central",
+          "description": "Remitance Central is a Bronze-tier money service business group operating under the MSB/PSP pod, headquartered in United Kingdom. The group oversees multiple licensed and service entities across its corporate structure.",
+          "lifecycle": {
+            "status": {
+              "code": "ACTIVE",
+              "active": true
+            },
+            "createdOn": "2021-10-20"
+          }
+        },
+        "segmentation": {
+          "pod": "MSB/PSP",
+          "vertical": "MSB",
+          "industry": "Money Service Business",
+          "commercialTier": "Bronze"
+        },
+        "attributes": [
+          {
+            "name": "risk_level",
+            "value": "Low",
+            "valueType": "string"
+          },
+          {
+            "name": "country_of_incorporation",
+            "value": {
+              "label": "United Kingdom",
+              "iso2": "GB"
+            },
+            "valueType": "object"
+          }
+        ],
+        "_links": {
+          "self": "/groups/167986897142"
+        }
+      },
+      {
+        "groupId": "187752508616",
+        "profile": {
+          "displayName": "Get Tranzzact",
+          "description": "Get Tranzzact is a Gold-tier money service business group operating under the MSB/PSP pod, headquartered in Luxembourg. The group oversees multiple licensed and service entities across its corporate structure.",
+          "lifecycle": {
+            "status": {
+              "code": "SUSPENDED",
+              "active": false
+            },
+            "createdOn": "2023-08-31"
+          }
+        },
+        "segmentation": {
+          "pod": "MSB/PSP",
+          "vertical": "MSB",
+          "industry": "Money Service Business",
+          "commercialTier": "Gold"
+        },
+        "attributes": [
+          {
+            "name": "risk_level",
+            "value": "High",
+            "valueType": "string"
+          },
+          {
+            "name": "country_of_incorporation",
+            "value": {
+              "label": "Luxembourg",
+              "iso2": "LU"
+            },
+            "valueType": "object"
+          }
+        ],
+        "_links": {
+          "self": "/groups/187752508616"
+        }
+      },
+      {
+        "groupId": "187754310858",
+        "profile": {
+          "displayName": "ConstructGame",
+          "description": "ConstructGame is a Gold-tier online gaming & gambling group operating under the Gaming/iGaming/Gambling pod, headquartered in Cyprus. The group oversees multiple licensed and service entities across its corporate structure.",
+          "lifecycle": {
+            "status": {
+              "code": "ACTIVE",
+              "active": true
+            },
+            "createdOn": "2021-06-21"
+          }
+        },
+        "segmentation": {
+          "pod": "Gaming/iGaming/Gambling",
+          "vertical": "Gaming",
+          "industry": "Online Gaming & Gambling",
+          "commercialTier": "Gold"
+        },
+        "attributes": [
+          {
+            "name": "risk_level",
+            "value": "Medium",
+            "valueType": "string"
+          },
+          {
+            "name": "country_of_incorporation",
+            "value": {
+              "label": "Cyprus",
+              "iso2": "CY"
+            },
+            "valueType": "object"
+          }
+        ],
+        "_links": {
+          "self": "/groups/187754310858"
+        }
+      },
+      {
+        "groupId": "187757905092",
+        "profile": {
+          "displayName": "Sanno Payments",
+          "description": "Sanno Payments is a Silver-tier money service business group operating under the MSB/PSP pod, headquartered in Lithuania. The group oversees multiple licensed and service entities across its corporate structure.",
+          "lifecycle": {
+            "status": {
+              "code": "ACTIVE",
+              "active": true
+            },
+            "createdOn": "2024-06-28"
+          }
+        },
+        "segmentation": {
+          "pod": "MSB/PSP",
+          "vertical": "MSB",
+          "industry": "Money Service Business",
+          "commercialTier": "Silver"
+        },
+        "attributes": [
+          {
+            "name": "risk_level",
+            "value": "Medium",
+            "valueType": "string"
+          },
+          {
+            "name": "country_of_incorporation",
+            "value": {
+              "label": "Lithuania",
+              "iso2": "LT"
+            },
+            "valueType": "object"
+          }
+        ],
+        "_links": {
+          "self": "/groups/187757905092"
+        }
+      },
+      {
+        "groupId": "192212183238",
+        "profile": {
+          "displayName": "Tech Key",
+          "description": "Tech Key is a Bronze-tier money service business group operating under the MSB/PSP pod, headquartered in Lithuania. The group oversees multiple licensed and service entities across its corporate structure.",
+          "lifecycle": {
+            "status": {
+              "code": "ACTIVE",
+              "active": true
+            },
+            "createdOn": "2025-02-27"
+          }
+        },
+        "segmentation": {
+          "pod": "MSB/PSP",
+          "vertical": "MSB",
+          "industry": "Money Service Business",
+          "commercialTier": "Bronze"
+        },
+        "attributes": [
+          {
+            "name": "risk_level",
+            "value": "High",
+            "valueType": "string"
+          },
+          {
+            "name": "country_of_incorporation",
+            "value": {
+              "label": "Lithuania",
+              "iso2": "LT"
+            },
+            "valueType": "object"
+          }
+        ],
+        "_links": {
+          "self": "/groups/192212183238"
+        }
+      },
+      {
+        "groupId": "192230405343",
+        "profile": {
+          "displayName": "Koba2Maya",
+          "description": "Koba2Maya is a Silver-tier online gaming & gambling group operating under the Gaming/iGaming/Gambling pod, headquartered in Curaçao. The group oversees multiple licensed and service entities across its corporate structure.",
+          "lifecycle": {
+            "status": {
+              "code": "ACTIVE",
+              "active": true
+            },
+            "createdOn": "2020-06-22"
+          }
+        },
+        "segmentation": {
+          "pod": "Gaming/iGaming/Gambling",
+          "vertical": "Gaming",
+          "industry": "Online Gaming & Gambling",
+          "commercialTier": "Silver"
+        },
+        "attributes": [
+          {
+            "name": "risk_level",
+            "value": "Low",
+            "valueType": "string"
+          },
+          {
+            "name": "country_of_incorporation",
+            "value": {
+              "label": "Curaçao",
+              "iso2": "CW"
+            },
+            "valueType": "object"
+          }
+        ],
+        "_links": {
+          "self": "/groups/192230405343"
+        }
+      },
+      {
+        "groupId": "192315275482",
+        "profile": {
+          "displayName": "Oni Group",
+          "description": "Oni Group is a Bronze-tier money service business group operating under the MSB/PSP pod, headquartered in United Kingdom. The group oversees multiple licensed and service entities across its corporate structure.",
+          "lifecycle": {
+            "status": {
+              "code": "ACTIVE",
+              "active": true
+            },
+            "createdOn": "2023-12-13"
+          }
+        },
+        "segmentation": {
+          "pod": "MSB/PSP",
+          "vertical": "MSB",
+          "industry": "Money Service Business",
+          "commercialTier": "Bronze"
+        },
+        "attributes": [
+          {
+            "name": "risk_level",
+            "value": "Low",
+            "valueType": "string"
+          },
+          {
+            "name": "country_of_incorporation",
+            "value": {
+              "label": "United Kingdom",
+              "iso2": "GB"
+            },
+            "valueType": "object"
+          }
+        ],
+        "_links": {
+          "self": "/groups/192315275482"
+        }
+      },
+      {
+        "groupId": "192400133342",
+        "profile": {
+          "displayName": "NXT Services",
+          "description": "NXT Services is a Silver-tier crypto assets & leveraged trading group operating under the Crypto/CFD/Forex pod, headquartered in Cyprus. The group oversees multiple licensed and service entities across its corporate structure.",
+          "lifecycle": {
+            "status": {
+              "code": "ACTIVE",
+              "active": true
+            },
+            "createdOn": "2024-09-30"
+          }
+        },
+        "segmentation": {
+          "pod": "Crypto/CFD/Forex",
+          "vertical": "Crypto",
+          "industry": "Crypto Assets & Leveraged Trading",
+          "commercialTier": "Silver"
+        },
+        "attributes": [
+          {
+            "name": "risk_level",
+            "value": "Medium",
+            "valueType": "string"
+          },
+          {
+            "name": "country_of_incorporation",
+            "value": {
+              "label": "Cyprus",
+              "iso2": "CY"
+            },
+            "valueType": "object"
+          }
+        ],
+        "_links": {
+          "self": "/groups/192400133342"
+        }
+      },
+      {
+        "groupId": "192402023626",
+        "profile": {
+          "displayName": "Cube Empire",
+          "description": "Cube Empire is a Bronze-tier money service business group operating under the MSB/PSP pod, headquartered in United Kingdom. The group oversees multiple licensed and service entities across its corporate structure.",
+          "lifecycle": {
+            "status": {
+              "code": "SUSPENDED",
+              "active": false
+            },
+            "createdOn": "2024-12-03"
+          }
+        },
+        "segmentation": {
+          "pod": "MSB/PSP",
+          "vertical": "MSB",
+          "industry": "Money Service Business",
+          "commercialTier": "Bronze"
+        },
+        "attributes": [
+          {
+            "name": "risk_level",
+            "value": "Low",
+            "valueType": "string"
+          },
+          {
+            "name": "country_of_incorporation",
+            "value": {
+              "label": "United Kingdom",
+              "iso2": "GB"
+            },
+            "valueType": "object"
+          }
+        ],
+        "_links": {
+          "self": "/groups/192402023626"
+        }
+      },
+      {
+        "groupId": "192407450811",
+        "profile": {
+          "displayName": "Crytopera",
+          "description": "Crytopera is a Silver-tier crypto assets & leveraged trading group operating under the Crypto/CFD/Forex pod, headquartered in Lithuania. The group oversees multiple licensed and service entities across its corporate structure.",
+          "lifecycle": {
+            "status": {
+              "code": "ACTIVE",
+              "active": true
+            },
+            "createdOn": "2025-01-07"
+          }
+        },
+        "segmentation": {
+          "pod": "Crypto/CFD/Forex",
+          "vertical": "Crypto",
+          "industry": "Crypto Assets & Leveraged Trading",
+          "commercialTier": "Silver"
+        },
+        "attributes": [
+          {
+            "name": "risk_level",
+            "value": "High",
+            "valueType": "string"
+          },
+          {
+            "name": "country_of_incorporation",
+            "value": {
+              "label": "Lithuania",
+              "iso2": "LT"
+            },
+            "valueType": "object"
+          }
+        ],
+        "_links": {
+          "self": "/groups/192407450811"
+        }
+      },
+      {
+        "groupId": "192457113847",
+        "profile": {
+          "displayName": "LatTrade",
+          "description": "LatTrade is a Bronze-tier crypto assets & leveraged trading group operating under the Crypto/CFD/Forex pod, headquartered in Switzerland. The group oversees multiple licensed and service entities across its corporate structure.",
+          "lifecycle": {
+            "status": {
+              "code": "ACTIVE",
+              "active": true
+            },
+            "createdOn": "2024-10-11"
+          }
+        },
+        "segmentation": {
+          "pod": "Crypto/CFD/Forex",
+          "vertical": "Crypto",
+          "industry": "Crypto Assets & Leveraged Trading",
+          "commercialTier": "Bronze"
+        },
+        "attributes": [
+          {
+            "name": "risk_level",
+            "value": "High",
+            "valueType": "string"
+          },
+          {
+            "name": "country_of_incorporation",
+            "value": {
+              "label": "Switzerland",
+              "iso2": "CH"
+            },
+            "valueType": "object"
+          }
+        ],
+        "_links": {
+          "self": "/groups/192457113847"
+        }
+      },
+      {
+        "groupId": "208399264973",
+        "profile": {
+          "displayName": "TranWire Tech",
+          "description": "TranWire Tech is a Bronze-tier money service business group operating under the MSB/PSP pod, headquartered in Netherlands. The group oversees multiple licensed and service entities across its corporate structure.",
+          "lifecycle": {
+            "status": {
+              "code": "ACTIVE",
+              "active": true
+            },
+            "createdOn": "2023-09-19"
+          }
+        },
+        "segmentation": {
+          "pod": "MSB/PSP",
+          "vertical": "MSB",
+          "industry": "Money Service Business",
+          "commercialTier": "Bronze"
+        },
+        "attributes": [
+          {
+            "name": "risk_level",
+            "value": "Medium",
+            "valueType": "string"
+          },
+          {
+            "name": "country_of_incorporation",
+            "value": {
+              "label": "Netherlands",
+              "iso2": "NL"
+            },
+            "valueType": "object"
+          }
+        ],
+        "_links": {
+          "self": "/groups/208399264973"
+        }
+      }
+    ]
+  }
+}

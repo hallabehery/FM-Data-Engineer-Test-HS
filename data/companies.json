@@ -1,0 +1,2791 @@
+{
+  "metadata": {
+    "schema": "dc/v2",
+    "generated_at": "2026-06-16T00:00:00Z",
+    "entity_type": "direct_company",
+    "natural_key": "dcId",
+    "bridge_key": "relationships.parentGroup.value -> group.groupId",
+    "total": 44
+  },
+  "records": [
+    {
+      "dcId": "234850008297",
+      "relationships": {
+        "parentGroup": {
+          "ref": "groupId",
+          "value": "167898894567",
+          "role": "HOLDING"
+        }
+      },
+      "registration": {
+        "legalName": "Payment One Holding S.à r.l.",
+        "status": "ACTIVE",
+        "incorporation": {
+          "country": "Cyprus",
+          "iso2": "CY"
+        },
+        "incorporatedOn": "2024-04-26",
+        "createdEpochMs": 1714089600000
+      },
+      "classification": {
+        "vertical": "Holding",
+        "industry": "Holding Company / Group Treasury"
+      },
+      "regulatory": {
+        "licensed": false,
+        "licences": []
+      },
+      "workforce": {
+        "headcount": 25,
+        "headcountBasis": "FTE"
+      },
+      "financials": {
+        "currency": "USD",
+        "annualRevenue": "USD 5.95M",
+        "totalAssets": "USD 714.88M"
+      },
+      "footprint": {
+        "countriesOfOperation": [
+          "BR",
+          "SE",
+          "AE",
+          "AU",
+          "IN",
+          "NL"
+        ],
+        "operationCount": 6
+      },
+      "attributes": [
+        {
+          "name": "risk_level",
+          "value": "Medium"
+        },
+        {
+          "name": "entity_role",
+          "value": "HOLDING"
+        }
+      ]
+    },
+    {
+      "dcId": "234939159769",
+      "relationships": {
+        "parentGroup": {
+          "ref": "groupId",
+          "value": "167898894567",
+          "role": "OPERATING"
+        }
+      },
+      "registration": {
+        "legalName": "Payment One Operating Company Ltd",
+        "status": "ACTIVE",
+        "incorporation": {
+          "country": "Cyprus",
+          "iso2": "CY"
+        },
+        "incorporatedOn": "2024-01-18",
+        "createdEpochMs": 1705536000000
+      },
+      "classification": {
+        "vertical": "MSB",
+        "industry": "Money Service Business"
+      },
+      "regulatory": {
+        "licensed": true,
+        "licences": [
+          {
+            "type": "Money Transmitter License (MTL)",
+            "jurisdictions": [
+              "US"
+            ]
+          },
+          {
+            "type": "Authorised Payment Institution (API)",
+            "jurisdictions": [
+              "GB",
+              "NL",
+              "LU"
+            ]
+          }
+        ]
+      },
+      "workforce": {
+        "headcount": 490,
+        "headcountBasis": "FTE"
+      },
+      "financials": {
+        "currency": "USD",
+        "annualRevenue": "USD 91.70M",
+        "totalAssets": "USD 187.04M"
+      },
+      "footprint": {
+        "countriesOfOperation": [
+          "PL",
+          "DE",
+          "IN",
+          "SE",
+          "PT",
+          "US"
+        ],
+        "operationCount": 6
+      },
+      "attributes": [
+        {
+          "name": "risk_level",
+          "value": "High"
+        },
+        {
+          "name": "entity_role",
+          "value": "OPERATING"
+        }
+      ]
+    },
+    {
+      "dcId": "234854669542",
+      "relationships": {
+        "parentGroup": {
+          "ref": "groupId",
+          "value": "167986897142",
+          "role": "HOLDING"
+        }
+      },
+      "registration": {
+        "legalName": "Remitance Central Holdings Ltd",
+        "status": "SUSPENDED",
+        "incorporation": {
+          "country": "Lithuania",
+          "iso2": "LT"
+        },
+        "incorporatedOn": "2022-12-08",
+        "createdEpochMs": 1670457600000
+      },
+      "classification": {
+        "vertical": "Holding",
+        "industry": "Holding Company / Group Treasury"
+      },
+      "regulatory": {
+        "licensed": false,
+        "licences": []
+      },
+      "workforce": {
+        "headcount": 30,
+        "headcountBasis": "FTE"
+      },
+      "financials": {
+        "currency": "USD",
+        "annualRevenue": "USD 10.24M",
+        "totalAssets": "USD 321.26M"
+      },
+      "footprint": {
+        "countriesOfOperation": [
+          "AE",
+          "CA",
+          "US",
+          "SG"
+        ],
+        "operationCount": 4
+      },
+      "attributes": [
+        {
+          "name": "risk_level",
+          "value": "Low"
+        },
+        {
+          "name": "entity_role",
+          "value": "HOLDING"
+        }
+      ]
+    },
+    {
+      "dcId": "234939159775",
+      "relationships": {
+        "parentGroup": {
+          "ref": "groupId",
+          "value": "167986897142",
+          "role": "OPERATING"
+        }
+      },
+      "registration": {
+        "legalName": "Remitance Central (Europe) Ltd",
+        "status": "ACTIVE",
+        "incorporation": {
+          "country": "Curaçao",
+          "iso2": "CW"
+        },
+        "incorporatedOn": "2021-10-20",
+        "createdEpochMs": 1634688000000
+      },
+      "classification": {
+        "vertical": "MSB",
+        "industry": "Money Service Business"
+      },
+      "regulatory": {
+        "licensed": true,
+        "licences": [
+          {
+            "type": "Electronic Money Institution (EMI)",
+            "jurisdictions": [
+              "LT",
+              "GB",
+              "IE"
+            ]
+          }
+        ]
+      },
+      "workforce": {
+        "headcount": 600,
+        "headcountBasis": "FTE"
+      },
+      "financials": {
+        "currency": "USD",
+        "annualRevenue": "USD 303.60M",
+        "totalAssets": "USD 82.26M"
+      },
+      "footprint": {
+        "countriesOfOperation": [
+          "JP",
+          "GB"
+        ],
+        "operationCount": 2
+      },
+      "attributes": [
+        {
+          "name": "risk_level",
+          "value": "Low"
+        },
+        {
+          "name": "entity_role",
+          "value": "OPERATING"
+        }
+      ]
+    },
+    {
+      "dcId": "258599414982",
+      "relationships": {
+        "parentGroup": {
+          "ref": "groupId",
+          "value": "187752508616",
+          "role": "OPERATING"
+        }
+      },
+      "registration": {
+        "legalName": "Get Tranzzact (Europe) Ltd",
+        "status": "ACTIVE",
+        "incorporation": {
+          "country": "Luxembourg",
+          "iso2": "LU"
+        },
+        "incorporatedOn": "2023-08-31",
+        "createdEpochMs": 1693440000000
+      },
+      "classification": {
+        "vertical": "MSB",
+        "industry": "Money Service Business"
+      },
+      "regulatory": {
+        "licensed": true,
+        "licences": [
+          {
+            "type": "Electronic Money Institution (EMI)",
+            "jurisdictions": [
+              "LT",
+              "GB",
+              "IE"
+            ]
+          },
+          {
+            "type": "Authorised Payment Institution (API)",
+            "jurisdictions": [
+              "GB",
+              "NL",
+              "LU"
+            ]
+          },
+          {
+            "type": "Money Transmitter License (MTL)",
+            "jurisdictions": [
+              "US"
+            ]
+          }
+        ]
+      },
+      "workforce": {
+        "headcount": 395,
+        "headcountBasis": "FTE"
+      },
+      "financials": {
+        "currency": "USD",
+        "annualRevenue": "USD 171.08M",
+        "totalAssets": "USD 187.81M"
+      },
+      "footprint": {
+        "countriesOfOperation": [
+          "SG"
+        ],
+        "operationCount": 1
+      },
+      "attributes": [
+        {
+          "name": "risk_level",
+          "value": "Low"
+        },
+        {
+          "name": "entity_role",
+          "value": "OPERATING"
+        }
+      ]
+    },
+    {
+      "dcId": "258991877340",
+      "relationships": {
+        "parentGroup": {
+          "ref": "groupId",
+          "value": "187754310858",
+          "role": "OPERATING"
+        }
+      },
+      "registration": {
+        "legalName": "ConstructGame Operating Company Ltd",
+        "status": "ACTIVE",
+        "incorporation": {
+          "country": "Netherlands",
+          "iso2": "NL"
+        },
+        "incorporatedOn": "2021-06-21",
+        "createdEpochMs": 1624233600000
+      },
+      "classification": {
+        "vertical": "Gaming",
+        "industry": "Online Gaming & Gambling"
+      },
+      "regulatory": {
+        "licensed": true,
+        "licences": [
+          {
+            "type": "MGA Remote Gaming License",
+            "jurisdictions": [
+              "MT"
+            ]
+          },
+          {
+            "type": "UKGC Remote Operating License",
+            "jurisdictions": [
+              "GB"
+            ]
+          },
+          {
+            "type": "Curaçao eGaming License",
+            "jurisdictions": [
+              "CW"
+            ]
+          }
+        ]
+      },
+      "workforce": {
+        "headcount": 360,
+        "headcountBasis": "FTE"
+      },
+      "financials": {
+        "currency": "USD",
+        "annualRevenue": "USD 245.07M",
+        "totalAssets": "USD 248.84M"
+      },
+      "footprint": {
+        "countriesOfOperation": [
+          "DE",
+          "MX"
+        ],
+        "operationCount": 2
+      },
+      "attributes": [
+        {
+          "name": "risk_level",
+          "value": "Low"
+        },
+        {
+          "name": "entity_role",
+          "value": "OPERATING"
+        }
+      ]
+    },
+    {
+      "dcId": "258970163419",
+      "relationships": {
+        "parentGroup": {
+          "ref": "groupId",
+          "value": "187754310858",
+          "role": "PAYMENTS"
+        }
+      },
+      "registration": {
+        "legalName": "ConstructGame Payments UAB",
+        "status": "ACTIVE",
+        "incorporation": {
+          "country": "Gibraltar",
+          "iso2": "GI"
+        },
+        "incorporatedOn": "2023-04-17",
+        "createdEpochMs": 1681689600000
+      },
+      "classification": {
+        "vertical": "Payments",
+        "industry": "Payment & E-Money Services"
+      },
+      "regulatory": {
+        "licensed": true,
+        "licences": [
+          {
+            "type": "Curaçao eGaming License",
+            "jurisdictions": [
+              "CW"
+            ]
+          },
+          {
+            "type": "UKGC Remote Operating License",
+            "jurisdictions": [
+              "GB"
+            ]
+          }
+        ]
+      },
+      "workforce": {
+        "headcount": 200,
+        "headcountBasis": "FTE"
+      },
+      "financials": {
+        "currency": "USD",
+        "annualRevenue": "USD 129.64M",
+        "totalAssets": "USD 161.72M"
+      },
+      "footprint": {
+        "countriesOfOperation": [
+          "AE",
+          "ZA",
+          "GB",
+          "IE",
+          "MX",
+          "SG"
+        ],
+        "operationCount": 6
+      },
+      "attributes": [
+        {
+          "name": "risk_level",
+          "value": "High"
+        },
+        {
+          "name": "entity_role",
+          "value": "PAYMENTS"
+        }
+      ]
+    },
+    {
+      "dcId": "258740050135",
+      "relationships": {
+        "parentGroup": {
+          "ref": "groupId",
+          "value": "187754310858",
+          "role": "TECHNOLOGY"
+        }
+      },
+      "registration": {
+        "legalName": "ConstructGame Technology Pvt Ltd",
+        "status": "ACTIVE",
+        "incorporation": {
+          "country": "Curaçao",
+          "iso2": "CW"
+        },
+        "incorporatedOn": "2024-11-13",
+        "createdEpochMs": 1731456000000
+      },
+      "classification": {
+        "vertical": "Technology",
+        "industry": "Software Development & Platform Engineering"
+      },
+      "regulatory": {
+        "licensed": false,
+        "licences": []
+      },
+      "workforce": {
+        "headcount": 365,
+        "headcountBasis": "FTE"
+      },
+      "financials": {
+        "currency": "USD",
+        "annualRevenue": "USD 42.56M",
+        "totalAssets": "USD 29.54M"
+      },
+      "footprint": {
+        "countriesOfOperation": [
+          "ZA",
+          "PL",
+          "NL",
+          "IE",
+          "GB",
+          "DE"
+        ],
+        "operationCount": 6
+      },
+      "attributes": [
+        {
+          "name": "risk_level",
+          "value": "Low"
+        },
+        {
+          "name": "entity_role",
+          "value": "TECHNOLOGY"
+        }
+      ]
+    },
+    {
+      "dcId": "258929414331",
+      "relationships": {
+        "parentGroup": {
+          "ref": "groupId",
+          "value": "187754310858",
+          "role": "MARKETING"
+        }
+      },
+      "registration": {
+        "legalName": "ConstructGame Media Ltd",
+        "status": "SUSPENDED",
+        "incorporation": {
+          "country": "Gibraltar",
+          "iso2": "GI"
+        },
+        "incorporatedOn": "2024-04-19",
+        "createdEpochMs": 1713484800000
+      },
+      "classification": {
+        "vertical": "Marketing",
+        "industry": "Marketing & Customer Acquisition"
+      },
+      "regulatory": {
+        "licensed": false,
+        "licences": []
+      },
+      "workforce": {
+        "headcount": 60,
+        "headcountBasis": "FTE"
+      },
+      "financials": {
+        "currency": "USD",
+        "annualRevenue": "USD 26.44M",
+        "totalAssets": "USD 5.46M"
+      },
+      "footprint": {
+        "countriesOfOperation": [
+          "US",
+          "CA",
+          "IE",
+          "SG"
+        ],
+        "operationCount": 4
+      },
+      "attributes": [
+        {
+          "name": "risk_level",
+          "value": "Medium"
+        },
+        {
+          "name": "entity_role",
+          "value": "MARKETING"
+        }
+      ]
+    },
+    {
+      "dcId": "279464884442",
+      "relationships": {
+        "parentGroup": {
+          "ref": "groupId",
+          "value": "187754310858",
+          "role": "LICENSING_IP"
+        }
+      },
+      "registration": {
+        "legalName": "ConstructGame IP Ltd",
+        "status": "SUSPENDED",
+        "incorporation": {
+          "country": "Estonia",
+          "iso2": "EE"
+        },
+        "incorporatedOn": "2025-08-19",
+        "createdEpochMs": 1755561600000
+      },
+      "classification": {
+        "vertical": "Licensing",
+        "industry": "Intellectual Property Licensing"
+      },
+      "regulatory": {
+        "licensed": false,
+        "licences": []
+      },
+      "workforce": {
+        "headcount": 5,
+        "headcountBasis": "FTE"
+      },
+      "financials": {
+        "currency": "USD",
+        "annualRevenue": "USD 42.87M",
+        "totalAssets": "USD 218.77M"
+      },
+      "footprint": {
+        "countriesOfOperation": [
+          "MX",
+          "PL",
+          "JP",
+          "AE",
+          "AU"
+        ],
+        "operationCount": 5
+      },
+      "attributes": [
+        {
+          "name": "risk_level",
+          "value": "Low"
+        },
+        {
+          "name": "entity_role",
+          "value": "LICENSING_IP"
+        }
+      ]
+    },
+    {
+      "dcId": "258863167682",
+      "relationships": {
+        "parentGroup": {
+          "ref": "groupId",
+          "value": "187754310858",
+          "role": "HOLDING"
+        }
+      },
+      "registration": {
+        "legalName": "ConstructGame Group Holdings Ltd",
+        "status": "ACTIVE",
+        "incorporation": {
+          "country": "Luxembourg",
+          "iso2": "LU"
+        },
+        "incorporatedOn": "2021-06-22",
+        "createdEpochMs": 1624320000000
+      },
+      "classification": {
+        "vertical": "Holding",
+        "industry": "Holding Company / Group Treasury"
+      },
+      "regulatory": {
+        "licensed": false,
+        "licences": []
+      },
+      "workforce": {
+        "headcount": 25,
+        "headcountBasis": "FTE"
+      },
+      "financials": {
+        "currency": "USD",
+        "annualRevenue": "USD 17.60M",
+        "totalAssets": "USD 445.39M"
+      },
+      "footprint": {
+        "countriesOfOperation": [
+          "US",
+          "CA",
+          "MX"
+        ],
+        "operationCount": 3
+      },
+      "attributes": [
+        {
+          "name": "risk_level",
+          "value": "Medium"
+        },
+        {
+          "name": "entity_role",
+          "value": "HOLDING"
+        }
+      ]
+    },
+    {
+      "dcId": "258962745548",
+      "relationships": {
+        "parentGroup": {
+          "ref": "groupId",
+          "value": "187754310858",
+          "role": "HOLDING"
+        }
+      },
+      "registration": {
+        "legalName": "ConstructGame Group Holdings Ltd",
+        "status": "ACTIVE",
+        "incorporation": {
+          "country": "Gibraltar",
+          "iso2": "GI"
+        },
+        "incorporatedOn": "2021-07-02",
+        "createdEpochMs": 1625184000000
+      },
+      "classification": {
+        "vertical": "Holding",
+        "industry": "Holding Company / Group Treasury"
+      },
+      "regulatory": {
+        "licensed": false,
+        "licences": []
+      },
+      "workforce": {
+        "headcount": 20,
+        "headcountBasis": "FTE"
+      },
+      "financials": {
+        "currency": "USD",
+        "annualRevenue": "USD 2.54M",
+        "totalAssets": "USD 742.25M"
+      },
+      "footprint": {
+        "countriesOfOperation": [
+          "NL",
+          "CA",
+          "IN",
+          "PL"
+        ],
+        "operationCount": 4
+      },
+      "attributes": [
+        {
+          "name": "risk_level",
+          "value": "Low"
+        },
+        {
+          "name": "entity_role",
+          "value": "HOLDING"
+        }
+      ]
+    },
+    {
+      "dcId": "258740050139",
+      "relationships": {
+        "parentGroup": {
+          "ref": "groupId",
+          "value": "187757905092",
+          "role": "OPERATING"
+        }
+      },
+      "registration": {
+        "legalName": "Sanno Payments Operations Ltd",
+        "status": "ACTIVE",
+        "incorporation": {
+          "country": "United Kingdom",
+          "iso2": "GB"
+        },
+        "incorporatedOn": "2024-06-28",
+        "createdEpochMs": 1719532800000
+      },
+      "classification": {
+        "vertical": "MSB",
+        "industry": "Money Service Business"
+      },
+      "regulatory": {
+        "licensed": true,
+        "licences": [
+          {
+            "type": "Authorised Payment Institution (API)",
+            "jurisdictions": [
+              "GB",
+              "NL",
+              "LU"
+            ]
+          }
+        ]
+      },
+      "workforce": {
+        "headcount": 590,
+        "headcountBasis": "FTE"
+      },
+      "financials": {
+        "currency": "USD",
+        "annualRevenue": "USD 43.35M",
+        "totalAssets": "USD 279.81M"
+      },
+      "footprint": {
+        "countriesOfOperation": [
+          "NL",
+          "SE",
+          "FR",
+          "IE",
+          "CA",
+          "IN",
+          "AU"
+        ],
+        "operationCount": 7
+      },
+      "attributes": [
+        {
+          "name": "risk_level",
+          "value": "Low"
+        },
+        {
+          "name": "entity_role",
+          "value": "OPERATING"
+        }
+      ]
+    },
+    {
+      "dcId": "262979201222",
+      "relationships": {
+        "parentGroup": {
+          "ref": "groupId",
+          "value": "192212183238",
+          "role": "OPERATING"
+        }
+      },
+      "registration": {
+        "legalName": "Tech Key (Europe) Ltd",
+        "status": "ACTIVE",
+        "incorporation": {
+          "country": "Cayman Islands",
+          "iso2": "KY"
+        },
+        "incorporatedOn": "2025-02-27",
+        "createdEpochMs": 1740614400000
+      },
+      "classification": {
+        "vertical": "MSB",
+        "industry": "Money Service Business"
+      },
+      "regulatory": {
+        "licensed": true,
+        "licences": [
+          {
+            "type": "Electronic Money Institution (EMI)",
+            "jurisdictions": [
+              "LT",
+              "GB",
+              "IE"
+            ]
+          },
+          {
+            "type": "Authorised Payment Institution (API)",
+            "jurisdictions": [
+              "GB",
+              "NL",
+              "LU"
+            ]
+          },
+          {
+            "type": "Money Transmitter License (MTL)",
+            "jurisdictions": [
+              "US"
+            ]
+          }
+        ]
+      },
+      "workforce": {
+        "headcount": 225,
+        "headcountBasis": "FTE"
+      },
+      "financials": {
+        "currency": "USD",
+        "annualRevenue": "USD 288.62M",
+        "totalAssets": "USD 186.99M"
+      },
+      "footprint": {
+        "countriesOfOperation": [
+          "FR",
+          "IE"
+        ],
+        "operationCount": 2
+      },
+      "attributes": [
+        {
+          "name": "risk_level",
+          "value": "Medium"
+        },
+        {
+          "name": "entity_role",
+          "value": "OPERATING"
+        }
+      ]
+    },
+    {
+      "dcId": "262956506344",
+      "relationships": {
+        "parentGroup": {
+          "ref": "groupId",
+          "value": "192230405343",
+          "role": "HOLDING"
+        }
+      },
+      "registration": {
+        "legalName": "Koba2Maya Holding S.à r.l.",
+        "status": "ACTIVE",
+        "incorporation": {
+          "country": "Cayman Islands",
+          "iso2": "KY"
+        },
+        "incorporatedOn": "2025-04-04",
+        "createdEpochMs": 1743724800000
+      },
+      "classification": {
+        "vertical": "Holding",
+        "industry": "Holding Company / Group Treasury"
+      },
+      "regulatory": {
+        "licensed": false,
+        "licences": []
+      },
+      "workforce": {
+        "headcount": 20,
+        "headcountBasis": "FTE"
+      },
+      "financials": {
+        "currency": "USD",
+        "annualRevenue": "USD 13.94M",
+        "totalAssets": "USD 1.04B"
+      },
+      "footprint": {
+        "countriesOfOperation": [
+          "US",
+          "GB",
+          "AU"
+        ],
+        "operationCount": 3
+      },
+      "attributes": [
+        {
+          "name": "risk_level",
+          "value": "Low"
+        },
+        {
+          "name": "entity_role",
+          "value": "HOLDING"
+        }
+      ]
+    },
+    {
+      "dcId": "262994262243",
+      "relationships": {
+        "parentGroup": {
+          "ref": "groupId",
+          "value": "192230405343",
+          "role": "PAYMENTS"
+        }
+      },
+      "registration": {
+        "legalName": "Koba2Maya Payments Ltd",
+        "status": "SUSPENDED",
+        "incorporation": {
+          "country": "Cyprus",
+          "iso2": "CY"
+        },
+        "incorporatedOn": "2022-11-01",
+        "createdEpochMs": 1667260800000
+      },
+      "classification": {
+        "vertical": "Payments",
+        "industry": "Payment & E-Money Services"
+      },
+      "regulatory": {
+        "licensed": true,
+        "licences": [
+          {
+            "type": "MGA Remote Gaming License",
+            "jurisdictions": [
+              "MT"
+            ]
+          }
+        ]
+      },
+      "workforce": {
+        "headcount": 230,
+        "headcountBasis": "FTE"
+      },
+      "financials": {
+        "currency": "USD",
+        "annualRevenue": "USD 61.12M",
+        "totalAssets": "USD 231.82M"
+      },
+      "footprint": {
+        "countriesOfOperation": [
+          "IT",
+          "MX",
+          "CA",
+          "PT"
+        ],
+        "operationCount": 4
+      },
+      "attributes": [
+        {
+          "name": "risk_level",
+          "value": "High"
+        },
+        {
+          "name": "entity_role",
+          "value": "PAYMENTS"
+        }
+      ]
+    },
+    {
+      "dcId": "262994262244",
+      "relationships": {
+        "parentGroup": {
+          "ref": "groupId",
+          "value": "192230405343",
+          "role": "TECHNOLOGY"
+        }
+      },
+      "registration": {
+        "legalName": "Koba2Maya Labs Ltd",
+        "status": "SUSPENDED",
+        "incorporation": {
+          "country": "United Kingdom",
+          "iso2": "GB"
+        },
+        "incorporatedOn": "2020-07-07",
+        "createdEpochMs": 1594080000000
+      },
+      "classification": {
+        "vertical": "Technology",
+        "industry": "Software Development & Platform Engineering"
+      },
+      "regulatory": {
+        "licensed": false,
+        "licences": []
+      },
+      "workforce": {
+        "headcount": 260,
+        "headcountBasis": "FTE"
+      },
+      "financials": {
+        "currency": "USD",
+        "annualRevenue": "USD 62.58M",
+        "totalAssets": "USD 16.60M"
+      },
+      "footprint": {
+        "countriesOfOperation": [
+          "IN",
+          "PT",
+          "US",
+          "FR",
+          "ES",
+          "JP"
+        ],
+        "operationCount": 6
+      },
+      "attributes": [
+        {
+          "name": "risk_level",
+          "value": "High"
+        },
+        {
+          "name": "entity_role",
+          "value": "TECHNOLOGY"
+        }
+      ]
+    },
+    {
+      "dcId": "262995992770",
+      "relationships": {
+        "parentGroup": {
+          "ref": "groupId",
+          "value": "192230405343",
+          "role": "OPERATING"
+        }
+      },
+      "registration": {
+        "legalName": "Koba2Maya Operations Ltd",
+        "status": "ACTIVE",
+        "incorporation": {
+          "country": "Lithuania",
+          "iso2": "LT"
+        },
+        "incorporatedOn": "2020-06-22",
+        "createdEpochMs": 1592784000000
+      },
+      "classification": {
+        "vertical": "Gaming",
+        "industry": "Online Gaming & Gambling"
+      },
+      "regulatory": {
+        "licensed": true,
+        "licences": [
+          {
+            "type": "UKGC Remote Operating License",
+            "jurisdictions": [
+              "GB"
+            ]
+          },
+          {
+            "type": "MGA Remote Gaming License",
+            "jurisdictions": [
+              "MT"
+            ]
+          },
+          {
+            "type": "Curaçao eGaming License",
+            "jurisdictions": [
+              "CW"
+            ]
+          }
+        ]
+      },
+      "workforce": {
+        "headcount": 260,
+        "headcountBasis": "FTE"
+      },
+      "financials": {
+        "currency": "USD",
+        "annualRevenue": "USD 31.02M",
+        "totalAssets": "USD 430.93M"
+      },
+      "footprint": {
+        "countriesOfOperation": [
+          "PT",
+          "AU",
+          "ZA",
+          "IN"
+        ],
+        "operationCount": 4
+      },
+      "attributes": [
+        {
+          "name": "risk_level",
+          "value": "Low"
+        },
+        {
+          "name": "entity_role",
+          "value": "OPERATING"
+        }
+      ]
+    },
+    {
+      "dcId": "262994262239",
+      "relationships": {
+        "parentGroup": {
+          "ref": "groupId",
+          "value": "192230405343",
+          "role": "LICENSING_IP"
+        }
+      },
+      "registration": {
+        "legalName": "Koba2Maya IP Ltd",
+        "status": "ACTIVE",
+        "incorporation": {
+          "country": "Isle of Man",
+          "iso2": "IM"
+        },
+        "incorporatedOn": "2020-07-07",
+        "createdEpochMs": 1594080000000
+      },
+      "classification": {
+        "vertical": "Licensing",
+        "industry": "Intellectual Property Licensing"
+      },
+      "regulatory": {
+        "licensed": false,
+        "licences": []
+      },
+      "workforce": {
+        "headcount": 25,
+        "headcountBasis": "FTE"
+      },
+      "financials": {
+        "currency": "USD",
+        "annualRevenue": "USD 11.63M",
+        "totalAssets": "USD 109.74M"
+      },
+      "footprint": {
+        "countriesOfOperation": [
+          "AE",
+          "ES"
+        ],
+        "operationCount": 2
+      },
+      "attributes": [
+        {
+          "name": "risk_level",
+          "value": "Low"
+        },
+        {
+          "name": "entity_role",
+          "value": "LICENSING_IP"
+        }
+      ]
+    },
+    {
+      "dcId": "262764306625",
+      "relationships": {
+        "parentGroup": {
+          "ref": "groupId",
+          "value": "192230405343",
+          "role": "HOLDING"
+        }
+      },
+      "registration": {
+        "legalName": "Koba2Maya Group Holdings Ltd",
+        "status": "ACTIVE",
+        "incorporation": {
+          "country": "Lithuania",
+          "iso2": "LT"
+        },
+        "incorporatedOn": "2022-03-17",
+        "createdEpochMs": 1647475200000
+      },
+      "classification": {
+        "vertical": "Holding",
+        "industry": "Holding Company / Group Treasury"
+      },
+      "regulatory": {
+        "licensed": false,
+        "licences": []
+      },
+      "workforce": {
+        "headcount": 5,
+        "headcountBasis": "FTE"
+      },
+      "financials": {
+        "currency": "USD",
+        "annualRevenue": "USD 13.72M",
+        "totalAssets": "USD 417.57M"
+      },
+      "footprint": {
+        "countriesOfOperation": [
+          "PL"
+        ],
+        "operationCount": 1
+      },
+      "attributes": [
+        {
+          "name": "risk_level",
+          "value": "Medium"
+        },
+        {
+          "name": "entity_role",
+          "value": "HOLDING"
+        }
+      ]
+    },
+    {
+      "dcId": "262994262246",
+      "relationships": {
+        "parentGroup": {
+          "ref": "groupId",
+          "value": "192230405343",
+          "role": "HOLDING"
+        }
+      },
+      "registration": {
+        "legalName": "Koba2Maya Group Holdings Ltd",
+        "status": "ACTIVE",
+        "incorporation": {
+          "country": "Malta",
+          "iso2": "MT"
+        },
+        "incorporatedOn": "2021-12-21",
+        "createdEpochMs": 1640044800000
+      },
+      "classification": {
+        "vertical": "Holding",
+        "industry": "Holding Company / Group Treasury"
+      },
+      "regulatory": {
+        "licensed": false,
+        "licences": []
+      },
+      "workforce": {
+        "headcount": 20,
+        "headcountBasis": "FTE"
+      },
+      "financials": {
+        "currency": "USD",
+        "annualRevenue": "USD 12.67M",
+        "totalAssets": "USD 362.47M"
+      },
+      "footprint": {
+        "countriesOfOperation": [
+          "PL",
+          "NL",
+          "IT",
+          "AU",
+          "CA",
+          "SG",
+          "SE"
+        ],
+        "operationCount": 7
+      },
+      "attributes": [
+        {
+          "name": "risk_level",
+          "value": "Low"
+        },
+        {
+          "name": "entity_role",
+          "value": "HOLDING"
+        }
+      ]
+    },
+    {
+      "dcId": "262950234318",
+      "relationships": {
+        "parentGroup": {
+          "ref": "groupId",
+          "value": "192230405343",
+          "role": "PAYMENTS"
+        }
+      },
+      "registration": {
+        "legalName": "Koba2Maya Payments UAB",
+        "status": "ACTIVE",
+        "incorporation": {
+          "country": "Isle of Man",
+          "iso2": "IM"
+        },
+        "incorporatedOn": "2021-02-17",
+        "createdEpochMs": 1613520000000
+      },
+      "classification": {
+        "vertical": "Payments",
+        "industry": "Payment & E-Money Services"
+      },
+      "regulatory": {
+        "licensed": true,
+        "licences": [
+          {
+            "type": "UKGC Remote Operating License",
+            "jurisdictions": [
+              "GB"
+            ]
+          }
+        ]
+      },
+      "workforce": {
+        "headcount": 160,
+        "headcountBasis": "FTE"
+      },
+      "financials": {
+        "currency": "USD",
+        "annualRevenue": "USD 129.22M",
+        "totalAssets": "USD 44.83M"
+      },
+      "footprint": {
+        "countriesOfOperation": [
+          "JP",
+          "NL",
+          "CA",
+          "US",
+          "DE",
+          "BR",
+          "IE"
+        ],
+        "operationCount": 7
+      },
+      "attributes": [
+        {
+          "name": "risk_level",
+          "value": "Medium"
+        },
+        {
+          "name": "entity_role",
+          "value": "PAYMENTS"
+        }
+      ]
+    },
+    {
+      "dcId": "262997767409",
+      "relationships": {
+        "parentGroup": {
+          "ref": "groupId",
+          "value": "192230405343",
+          "role": "TECHNOLOGY"
+        }
+      },
+      "registration": {
+        "legalName": "Koba2Maya Labs Ltd",
+        "status": "ACTIVE",
+        "incorporation": {
+          "country": "Curaçao",
+          "iso2": "CW"
+        },
+        "incorporatedOn": "2023-03-10",
+        "createdEpochMs": 1678406400000
+      },
+      "classification": {
+        "vertical": "Technology",
+        "industry": "Software Development & Platform Engineering"
+      },
+      "regulatory": {
+        "licensed": false,
+        "licences": []
+      },
+      "workforce": {
+        "headcount": 240,
+        "headcountBasis": "FTE"
+      },
+      "financials": {
+        "currency": "USD",
+        "annualRevenue": "USD 29.80M",
+        "totalAssets": "USD 78.05M"
+      },
+      "footprint": {
+        "countriesOfOperation": [
+          "IN",
+          "PL",
+          "IE",
+          "DE",
+          "SG"
+        ],
+        "operationCount": 5
+      },
+      "attributes": [
+        {
+          "name": "risk_level",
+          "value": "Low"
+        },
+        {
+          "name": "entity_role",
+          "value": "TECHNOLOGY"
+        }
+      ]
+    },
+    {
+      "dcId": "262782728387",
+      "relationships": {
+        "parentGroup": {
+          "ref": "groupId",
+          "value": "192230405343",
+          "role": "MARKETING"
+        }
+      },
+      "registration": {
+        "legalName": "Koba2Maya Marketing LLC",
+        "status": "ACTIVE",
+        "incorporation": {
+          "country": "Malta",
+          "iso2": "MT"
+        },
+        "incorporatedOn": "2020-07-06",
+        "createdEpochMs": 1593993600000
+      },
+      "classification": {
+        "vertical": "Marketing",
+        "industry": "Marketing & Customer Acquisition"
+      },
+      "regulatory": {
+        "licensed": false,
+        "licences": []
+      },
+      "workforce": {
+        "headcount": 115,
+        "headcountBasis": "FTE"
+      },
+      "financials": {
+        "currency": "USD",
+        "annualRevenue": "USD 11.02M",
+        "totalAssets": "USD 39.65M"
+      },
+      "footprint": {
+        "countriesOfOperation": [
+          "AU",
+          "IT",
+          "SE"
+        ],
+        "operationCount": 3
+      },
+      "attributes": [
+        {
+          "name": "risk_level",
+          "value": "Low"
+        },
+        {
+          "name": "entity_role",
+          "value": "MARKETING"
+        }
+      ]
+    },
+    {
+      "dcId": "262958258410",
+      "relationships": {
+        "parentGroup": {
+          "ref": "groupId",
+          "value": "192230405343",
+          "role": "LICENSING_IP"
+        }
+      },
+      "registration": {
+        "legalName": "Koba2Maya Brand Licensing Ltd",
+        "status": "ACTIVE",
+        "incorporation": {
+          "country": "Lithuania",
+          "iso2": "LT"
+        },
+        "incorporatedOn": "2022-07-13",
+        "createdEpochMs": 1657670400000
+      },
+      "classification": {
+        "vertical": "Licensing",
+        "industry": "Intellectual Property Licensing"
+      },
+      "regulatory": {
+        "licensed": false,
+        "licences": []
+      },
+      "workforce": {
+        "headcount": 5,
+        "headcountBasis": "FTE"
+      },
+      "financials": {
+        "currency": "USD",
+        "annualRevenue": "USD 24.68M",
+        "totalAssets": "USD 103.93M"
+      },
+      "footprint": {
+        "countriesOfOperation": [
+          "FR",
+          "IT",
+          "US",
+          "BR",
+          "MX"
+        ],
+        "operationCount": 5
+      },
+      "attributes": [
+        {
+          "name": "risk_level",
+          "value": "Medium"
+        },
+        {
+          "name": "entity_role",
+          "value": "LICENSING_IP"
+        }
+      ]
+    },
+    {
+      "dcId": "262952169720",
+      "relationships": {
+        "parentGroup": {
+          "ref": "groupId",
+          "value": "192230405343",
+          "role": "HOLDING"
+        }
+      },
+      "registration": {
+        "legalName": "Koba2Maya Holding S.à r.l.",
+        "status": "ACTIVE",
+        "incorporation": {
+          "country": "Isle of Man",
+          "iso2": "IM"
+        },
+        "incorporatedOn": "2020-07-06",
+        "createdEpochMs": 1593993600000
+      },
+      "classification": {
+        "vertical": "Holding",
+        "industry": "Holding Company / Group Treasury"
+      },
+      "regulatory": {
+        "licensed": false,
+        "licences": []
+      },
+      "workforce": {
+        "headcount": 10,
+        "headcountBasis": "FTE"
+      },
+      "financials": {
+        "currency": "USD",
+        "annualRevenue": "USD 10.32M",
+        "totalAssets": "USD 710.57M"
+      },
+      "footprint": {
+        "countriesOfOperation": [
+          "JP",
+          "AU",
+          "DE",
+          "SE"
+        ],
+        "operationCount": 4
+      },
+      "attributes": [
+        {
+          "name": "risk_level",
+          "value": "Low"
+        },
+        {
+          "name": "entity_role",
+          "value": "HOLDING"
+        }
+      ]
+    },
+    {
+      "dcId": "262994262245",
+      "relationships": {
+        "parentGroup": {
+          "ref": "groupId",
+          "value": "192230405343",
+          "role": "HOLDING"
+        }
+      },
+      "registration": {
+        "legalName": "Koba2Maya Holdings Ltd",
+        "status": "ACTIVE",
+        "incorporation": {
+          "country": "Ireland",
+          "iso2": "IE"
+        },
+        "incorporatedOn": "2020-09-25",
+        "createdEpochMs": 1600992000000
+      },
+      "classification": {
+        "vertical": "Holding",
+        "industry": "Holding Company / Group Treasury"
+      },
+      "regulatory": {
+        "licensed": false,
+        "licences": []
+      },
+      "workforce": {
+        "headcount": 30,
+        "headcountBasis": "FTE"
+      },
+      "financials": {
+        "currency": "USD",
+        "annualRevenue": "USD 7.93M",
+        "totalAssets": "USD 579.00M"
+      },
+      "footprint": {
+        "countriesOfOperation": [
+          "MX",
+          "SG",
+          "AE",
+          "ES",
+          "JP",
+          "BR"
+        ],
+        "operationCount": 6
+      },
+      "attributes": [
+        {
+          "name": "risk_level",
+          "value": "Medium"
+        },
+        {
+          "name": "entity_role",
+          "value": "HOLDING"
+        }
+      ]
+    },
+    {
+      "dcId": "262952169717",
+      "relationships": {
+        "parentGroup": {
+          "ref": "groupId",
+          "value": "192230405343",
+          "role": "PAYMENTS"
+        }
+      },
+      "registration": {
+        "legalName": "Koba2Maya Payments UAB",
+        "status": "ACTIVE",
+        "incorporation": {
+          "country": "Lithuania",
+          "iso2": "LT"
+        },
+        "incorporatedOn": "2021-12-21",
+        "createdEpochMs": 1640044800000
+      },
+      "classification": {
+        "vertical": "Payments",
+        "industry": "Payment & E-Money Services"
+      },
+      "regulatory": {
+        "licensed": true,
+        "licences": [
+          {
+            "type": "Curaçao eGaming License",
+            "jurisdictions": [
+              "CW"
+            ]
+          },
+          {
+            "type": "UKGC Remote Operating License",
+            "jurisdictions": [
+              "GB"
+            ]
+          },
+          {
+            "type": "MGA Remote Gaming License",
+            "jurisdictions": [
+              "MT"
+            ]
+          }
+        ]
+      },
+      "workforce": {
+        "headcount": 55,
+        "headcountBasis": "FTE"
+      },
+      "financials": {
+        "currency": "USD",
+        "annualRevenue": "USD 117.95M",
+        "totalAssets": "USD 49.07M"
+      },
+      "footprint": {
+        "countriesOfOperation": [
+          "BR",
+          "SE",
+          "SG",
+          "AU",
+          "ES",
+          "IT"
+        ],
+        "operationCount": 6
+      },
+      "attributes": [
+        {
+          "name": "risk_level",
+          "value": "High"
+        },
+        {
+          "name": "entity_role",
+          "value": "PAYMENTS"
+        }
+      ]
+    },
+    {
+      "dcId": "262884422898",
+      "relationships": {
+        "parentGroup": {
+          "ref": "groupId",
+          "value": "192230405343",
+          "role": "TECHNOLOGY"
+        }
+      },
+      "registration": {
+        "legalName": "Koba2Maya Labs Ltd",
+        "status": "ACTIVE",
+        "incorporation": {
+          "country": "Gibraltar",
+          "iso2": "GI"
+        },
+        "incorporatedOn": "2020-07-03",
+        "createdEpochMs": 1593734400000
+      },
+      "classification": {
+        "vertical": "Technology",
+        "industry": "Software Development & Platform Engineering"
+      },
+      "regulatory": {
+        "licensed": false,
+        "licences": []
+      },
+      "workforce": {
+        "headcount": 80,
+        "headcountBasis": "FTE"
+      },
+      "financials": {
+        "currency": "USD",
+        "annualRevenue": "USD 34.15M",
+        "totalAssets": "USD 86.76M"
+      },
+      "footprint": {
+        "countriesOfOperation": [
+          "ES",
+          "IT",
+          "FR",
+          "MX"
+        ],
+        "operationCount": 4
+      },
+      "attributes": [
+        {
+          "name": "risk_level",
+          "value": "Low"
+        },
+        {
+          "name": "entity_role",
+          "value": "TECHNOLOGY"
+        }
+      ]
+    },
+    {
+      "dcId": "262958331091",
+      "relationships": {
+        "parentGroup": {
+          "ref": "groupId",
+          "value": "192230405343",
+          "role": "OPERATING"
+        }
+      },
+      "registration": {
+        "legalName": "Koba2Maya Operations Ltd",
+        "status": "ACTIVE",
+        "incorporation": {
+          "country": "Gibraltar",
+          "iso2": "GI"
+        },
+        "incorporatedOn": "2020-06-22",
+        "createdEpochMs": 1592784000000
+      },
+      "classification": {
+        "vertical": "Gaming",
+        "industry": "Online Gaming & Gambling"
+      },
+      "regulatory": {
+        "licensed": true,
+        "licences": [
+          {
+            "type": "MGA Remote Gaming License",
+            "jurisdictions": [
+              "MT"
+            ]
+          },
+          {
+            "type": "UKGC Remote Operating License",
+            "jurisdictions": [
+              "GB"
+            ]
+          },
+          {
+            "type": "Curaçao eGaming License",
+            "jurisdictions": [
+              "CW"
+            ]
+          }
+        ]
+      },
+      "workforce": {
+        "headcount": 500,
+        "headcountBasis": "FTE"
+      },
+      "financials": {
+        "currency": "USD",
+        "annualRevenue": "USD 293.31M",
+        "totalAssets": "USD 141.39M"
+      },
+      "footprint": {
+        "countriesOfOperation": [
+          "SG",
+          "ZA",
+          "AU",
+          "US",
+          "SE",
+          "IT"
+        ],
+        "operationCount": 6
+      },
+      "attributes": [
+        {
+          "name": "risk_level",
+          "value": "Medium"
+        },
+        {
+          "name": "entity_role",
+          "value": "OPERATING"
+        }
+      ]
+    },
+    {
+      "dcId": "262956506345",
+      "relationships": {
+        "parentGroup": {
+          "ref": "groupId",
+          "value": "192230405343",
+          "role": "LICENSING_IP"
+        }
+      },
+      "registration": {
+        "legalName": "Koba2Maya IP Ltd",
+        "status": "ACTIVE",
+        "incorporation": {
+          "country": "United Kingdom",
+          "iso2": "GB"
+        },
+        "incorporatedOn": "2020-07-03",
+        "createdEpochMs": 1593734400000
+      },
+      "classification": {
+        "vertical": "Licensing",
+        "industry": "Intellectual Property Licensing"
+      },
+      "regulatory": {
+        "licensed": false,
+        "licences": []
+      },
+      "workforce": {
+        "headcount": 15,
+        "headcountBasis": "FTE"
+      },
+      "financials": {
+        "currency": "USD",
+        "annualRevenue": "USD 31.03M",
+        "totalAssets": "USD 52.92M"
+      },
+      "footprint": {
+        "countriesOfOperation": [
+          "PL",
+          "BR",
+          "ZA",
+          "PT"
+        ],
+        "operationCount": 4
+      },
+      "attributes": [
+        {
+          "name": "risk_level",
+          "value": "Medium"
+        },
+        {
+          "name": "entity_role",
+          "value": "LICENSING_IP"
+        }
+      ]
+    },
+    {
+      "dcId": "262994262242",
+      "relationships": {
+        "parentGroup": {
+          "ref": "groupId",
+          "value": "192230405343",
+          "role": "HOLDING"
+        }
+      },
+      "registration": {
+        "legalName": "Koba2Maya Holdings Ltd",
+        "status": "ACTIVE",
+        "incorporation": {
+          "country": "Switzerland",
+          "iso2": "CH"
+        },
+        "incorporatedOn": "2020-07-08",
+        "createdEpochMs": 1594166400000
+      },
+      "classification": {
+        "vertical": "Holding",
+        "industry": "Holding Company / Group Treasury"
+      },
+      "regulatory": {
+        "licensed": false,
+        "licences": []
+      },
+      "workforce": {
+        "headcount": 10,
+        "headcountBasis": "FTE"
+      },
+      "financials": {
+        "currency": "USD",
+        "annualRevenue": "USD 16.55M",
+        "totalAssets": "USD 760.03M"
+      },
+      "footprint": {
+        "countriesOfOperation": [
+          "IN",
+          "US",
+          "FR",
+          "CA",
+          "JP",
+          "IT"
+        ],
+        "operationCount": 6
+      },
+      "attributes": [
+        {
+          "name": "risk_level",
+          "value": "Low"
+        },
+        {
+          "name": "entity_role",
+          "value": "HOLDING"
+        }
+      ]
+    },
+    {
+      "dcId": "262881770741",
+      "relationships": {
+        "parentGroup": {
+          "ref": "groupId",
+          "value": "192315275482",
+          "role": "OPERATING"
+        }
+      },
+      "registration": {
+        "legalName": "Oni Group (Europe) Ltd",
+        "status": "ACTIVE",
+        "incorporation": {
+          "country": "Malta",
+          "iso2": "MT"
+        },
+        "incorporatedOn": "2023-12-13",
+        "createdEpochMs": 1702425600000
+      },
+      "classification": {
+        "vertical": "MSB",
+        "industry": "Money Service Business"
+      },
+      "regulatory": {
+        "licensed": true,
+        "licences": [
+          {
+            "type": "Electronic Money Institution (EMI)",
+            "jurisdictions": [
+              "LT",
+              "GB",
+              "IE"
+            ]
+          }
+        ]
+      },
+      "workforce": {
+        "headcount": 570,
+        "headcountBasis": "FTE"
+      },
+      "financials": {
+        "currency": "USD",
+        "annualRevenue": "USD 309.36M",
+        "totalAssets": "USD 399.59M"
+      },
+      "footprint": {
+        "countriesOfOperation": [
+          "SG",
+          "AU",
+          "JP",
+          "ZA",
+          "US",
+          "IE"
+        ],
+        "operationCount": 6
+      },
+      "attributes": [
+        {
+          "name": "risk_level",
+          "value": "Low"
+        },
+        {
+          "name": "entity_role",
+          "value": "OPERATING"
+        }
+      ]
+    },
+    {
+      "dcId": "278810741962",
+      "relationships": {
+        "parentGroup": {
+          "ref": "groupId",
+          "value": "192400133342",
+          "role": "HOLDING"
+        }
+      },
+      "registration": {
+        "legalName": "NXT Services Holding S.à r.l.",
+        "status": "ACTIVE",
+        "incorporation": {
+          "country": "Netherlands",
+          "iso2": "NL"
+        },
+        "incorporatedOn": "2025-08-18",
+        "createdEpochMs": 1755475200000
+      },
+      "classification": {
+        "vertical": "Holding",
+        "industry": "Holding Company / Group Treasury"
+      },
+      "regulatory": {
+        "licensed": false,
+        "licences": []
+      },
+      "workforce": {
+        "headcount": 15,
+        "headcountBasis": "FTE"
+      },
+      "financials": {
+        "currency": "USD",
+        "annualRevenue": "USD 5.05M",
+        "totalAssets": "USD 880.33M"
+      },
+      "footprint": {
+        "countriesOfOperation": [
+          "SE",
+          "US",
+          "AU",
+          "PL",
+          "NL"
+        ],
+        "operationCount": 5
+      },
+      "attributes": [
+        {
+          "name": "risk_level",
+          "value": "Medium"
+        },
+        {
+          "name": "entity_role",
+          "value": "HOLDING"
+        }
+      ]
+    },
+    {
+      "dcId": "263002682585",
+      "relationships": {
+        "parentGroup": {
+          "ref": "groupId",
+          "value": "192400133342",
+          "role": "PAYMENTS"
+        }
+      },
+      "registration": {
+        "legalName": "NXT Services Payments Ltd",
+        "status": "ACTIVE",
+        "incorporation": {
+          "country": "Cyprus",
+          "iso2": "CY"
+        },
+        "incorporatedOn": "2025-02-17",
+        "createdEpochMs": 1739750400000
+      },
+      "classification": {
+        "vertical": "Payments",
+        "industry": "Payment & E-Money Services"
+      },
+      "regulatory": {
+        "licensed": true,
+        "licences": [
+          {
+            "type": "Money Transmitter License (MTL)",
+            "jurisdictions": [
+              "US"
+            ]
+          },
+          {
+            "type": "Virtual Asset Service Provider (VASP)",
+            "jurisdictions": [
+              "EE",
+              "GB"
+            ]
+          },
+          {
+            "type": "MiCA CASP Authorisation",
+            "jurisdictions": [
+              "LT",
+              "EE",
+              "CY"
+            ]
+          }
+        ]
+      },
+      "workforce": {
+        "headcount": 220,
+        "headcountBasis": "FTE"
+      },
+      "financials": {
+        "currency": "USD",
+        "annualRevenue": "USD 112.82M",
+        "totalAssets": "USD 177.99M"
+      },
+      "footprint": {
+        "countriesOfOperation": [
+          "AE",
+          "FR",
+          "SE",
+          "ZA"
+        ],
+        "operationCount": 4
+      },
+      "attributes": [
+        {
+          "name": "risk_level",
+          "value": "High"
+        },
+        {
+          "name": "entity_role",
+          "value": "PAYMENTS"
+        }
+      ]
+    },
+    {
+      "dcId": "381533967605",
+      "relationships": {
+        "parentGroup": {
+          "ref": "groupId",
+          "value": "192400133342",
+          "role": "TECHNOLOGY"
+        }
+      },
+      "registration": {
+        "legalName": "NXT Services Technology Pvt Ltd",
+        "status": "UNKNOWN",
+        "incorporation": {
+          "country": "United Kingdom",
+          "iso2": "GB"
+        },
+        "incorporatedOn": null,
+        "createdEpochMs": null
+      },
+      "classification": {
+        "vertical": "Technology",
+        "industry": "Software Development & Platform Engineering"
+      },
+      "regulatory": {
+        "licensed": false,
+        "licences": []
+      },
+      "workforce": {
+        "headcount": 75,
+        "headcountBasis": "FTE"
+      },
+      "financials": {
+        "currency": "USD",
+        "annualRevenue": "USD 55.12M",
+        "totalAssets": "USD 32.16M"
+      },
+      "footprint": {
+        "countriesOfOperation": [
+          "CA",
+          "JP",
+          "NL",
+          "MX"
+        ],
+        "operationCount": 4
+      },
+      "attributes": [
+        {
+          "name": "risk_level",
+          "value": "Medium"
+        },
+        {
+          "name": "entity_role",
+          "value": "TECHNOLOGY"
+        }
+      ]
+    },
+    {
+      "dcId": "384790834397",
+      "relationships": {
+        "parentGroup": {
+          "ref": "groupId",
+          "value": "192400133342",
+          "role": "MARKETING"
+        }
+      },
+      "registration": {
+        "legalName": "NXT Services Media Ltd",
+        "status": "UNKNOWN",
+        "incorporation": {
+          "country": "Lithuania",
+          "iso2": "LT"
+        },
+        "incorporatedOn": null,
+        "createdEpochMs": null
+      },
+      "classification": {
+        "vertical": "Marketing",
+        "industry": "Marketing & Customer Acquisition"
+      },
+      "regulatory": {
+        "licensed": false,
+        "licences": []
+      },
+      "workforce": {
+        "headcount": 50,
+        "headcountBasis": "FTE"
+      },
+      "financials": {
+        "currency": "USD",
+        "annualRevenue": "USD 12.27M",
+        "totalAssets": "USD 26.06M"
+      },
+      "footprint": {
+        "countriesOfOperation": [
+          "AU",
+          "IN",
+          "FR"
+        ],
+        "operationCount": 3
+      },
+      "attributes": [
+        {
+          "name": "risk_level",
+          "value": "Low"
+        },
+        {
+          "name": "entity_role",
+          "value": "MARKETING"
+        }
+      ]
+    },
+    {
+      "dcId": "262954811591",
+      "relationships": {
+        "parentGroup": {
+          "ref": "groupId",
+          "value": "192400133342",
+          "role": "OPERATING"
+        }
+      },
+      "registration": {
+        "legalName": "NXT Services Operations Ltd",
+        "status": "ACTIVE",
+        "incorporation": {
+          "country": "Luxembourg",
+          "iso2": "LU"
+        },
+        "incorporatedOn": "2024-09-30",
+        "createdEpochMs": 1727654400000
+      },
+      "classification": {
+        "vertical": "Crypto",
+        "industry": "Crypto Assets & Leveraged Trading"
+      },
+      "regulatory": {
+        "licensed": true,
+        "licences": [
+          {
+            "type": "MiCA CASP Authorisation",
+            "jurisdictions": [
+              "LT",
+              "EE",
+              "CY"
+            ]
+          }
+        ]
+      },
+      "workforce": {
+        "headcount": 245,
+        "headcountBasis": "FTE"
+      },
+      "financials": {
+        "currency": "USD",
+        "annualRevenue": "USD 195.87M",
+        "totalAssets": "USD 340.98M"
+      },
+      "footprint": {
+        "countriesOfOperation": [
+          "SE",
+          "AE",
+          "CA",
+          "PL",
+          "AU"
+        ],
+        "operationCount": 5
+      },
+      "attributes": [
+        {
+          "name": "risk_level",
+          "value": "Medium"
+        },
+        {
+          "name": "entity_role",
+          "value": "OPERATING"
+        }
+      ]
+    },
+    {
+      "dcId": "262790438097",
+      "relationships": {
+        "parentGroup": {
+          "ref": "groupId",
+          "value": "192402023626",
+          "role": "OPERATING"
+        }
+      },
+      "registration": {
+        "legalName": "Cube Empire (Europe) Ltd",
+        "status": "SUSPENDED",
+        "incorporation": {
+          "country": "Lithuania",
+          "iso2": "LT"
+        },
+        "incorporatedOn": "2024-12-03",
+        "createdEpochMs": 1733184000000
+      },
+      "classification": {
+        "vertical": "MSB",
+        "industry": "Money Service Business"
+      },
+      "regulatory": {
+        "licensed": true,
+        "licences": [
+          {
+            "type": "Authorised Payment Institution (API)",
+            "jurisdictions": [
+              "GB",
+              "NL",
+              "LU"
+            ]
+          },
+          {
+            "type": "Money Transmitter License (MTL)",
+            "jurisdictions": [
+              "US"
+            ]
+          }
+        ]
+      },
+      "workforce": {
+        "headcount": 475,
+        "headcountBasis": "FTE"
+      },
+      "financials": {
+        "currency": "USD",
+        "annualRevenue": "USD 227.31M",
+        "totalAssets": "USD 212.98M"
+      },
+      "footprint": {
+        "countriesOfOperation": [
+          "ES",
+          "IE",
+          "NL",
+          "CA",
+          "BR",
+          "MX",
+          "IT"
+        ],
+        "operationCount": 7
+      },
+      "attributes": [
+        {
+          "name": "risk_level",
+          "value": "Low"
+        },
+        {
+          "name": "entity_role",
+          "value": "OPERATING"
+        }
+      ]
+    },
+    {
+      "dcId": "263011742938",
+      "relationships": {
+        "parentGroup": {
+          "ref": "groupId",
+          "value": "192407450811",
+          "role": "OPERATING"
+        }
+      },
+      "registration": {
+        "legalName": "Crytopera Operating Company Ltd",
+        "status": "ACTIVE",
+        "incorporation": {
+          "country": "Lithuania",
+          "iso2": "LT"
+        },
+        "incorporatedOn": "2025-01-07",
+        "createdEpochMs": 1736208000000
+      },
+      "classification": {
+        "vertical": "Crypto",
+        "industry": "Crypto Assets & Leveraged Trading"
+      },
+      "regulatory": {
+        "licensed": true,
+        "licences": [
+          {
+            "type": "Money Transmitter License (MTL)",
+            "jurisdictions": [
+              "US"
+            ]
+          },
+          {
+            "type": "MiCA CASP Authorisation",
+            "jurisdictions": [
+              "LT",
+              "EE",
+              "CY"
+            ]
+          },
+          {
+            "type": "Virtual Asset Service Provider (VASP)",
+            "jurisdictions": [
+              "EE",
+              "GB"
+            ]
+          }
+        ]
+      },
+      "workforce": {
+        "headcount": 415,
+        "headcountBasis": "FTE"
+      },
+      "financials": {
+        "currency": "USD",
+        "annualRevenue": "USD 199.78M",
+        "totalAssets": "USD 115.93M"
+      },
+      "footprint": {
+        "countriesOfOperation": [
+          "BR",
+          "DE"
+        ],
+        "operationCount": 2
+      },
+      "attributes": [
+        {
+          "name": "risk_level",
+          "value": "Medium"
+        },
+        {
+          "name": "entity_role",
+          "value": "OPERATING"
+        }
+      ]
+    },
+    {
+      "dcId": "263020529858",
+      "relationships": {
+        "parentGroup": {
+          "ref": "groupId",
+          "value": "192457113847",
+          "role": "HOLDING"
+        }
+      },
+      "registration": {
+        "legalName": "LatTrade Holding S.à r.l.",
+        "status": "ACTIVE",
+        "incorporation": {
+          "country": "Malta",
+          "iso2": "MT"
+        },
+        "incorporatedOn": "2025-02-06",
+        "createdEpochMs": 1738800000000
+      },
+      "classification": {
+        "vertical": "Holding",
+        "industry": "Holding Company / Group Treasury"
+      },
+      "regulatory": {
+        "licensed": false,
+        "licences": []
+      },
+      "workforce": {
+        "headcount": 25,
+        "headcountBasis": "FTE"
+      },
+      "financials": {
+        "currency": "USD",
+        "annualRevenue": "USD 14.53M",
+        "totalAssets": "USD 618.77M"
+      },
+      "footprint": {
+        "countriesOfOperation": [
+          "DE",
+          "SE",
+          "MX",
+          "IT",
+          "PL",
+          "ES",
+          "ZA"
+        ],
+        "operationCount": 7
+      },
+      "attributes": [
+        {
+          "name": "risk_level",
+          "value": "Low"
+        },
+        {
+          "name": "entity_role",
+          "value": "HOLDING"
+        }
+      ]
+    },
+    {
+      "dcId": "262975379691",
+      "relationships": {
+        "parentGroup": {
+          "ref": "groupId",
+          "value": "192457113847",
+          "role": "OPERATING"
+        }
+      },
+      "registration": {
+        "legalName": "LatTrade Operations Ltd",
+        "status": "ACTIVE",
+        "incorporation": {
+          "country": "Estonia",
+          "iso2": "EE"
+        },
+        "incorporatedOn": "2024-10-11",
+        "createdEpochMs": 1728604800000
+      },
+      "classification": {
+        "vertical": "Crypto",
+        "industry": "Crypto Assets & Leveraged Trading"
+      },
+      "regulatory": {
+        "licensed": true,
+        "licences": [
+          {
+            "type": "Virtual Asset Service Provider (VASP)",
+            "jurisdictions": [
+              "EE",
+              "GB"
+            ]
+          },
+          {
+            "type": "Money Transmitter License (MTL)",
+            "jurisdictions": [
+              "US"
+            ]
+          },
+          {
+            "type": "MiCA CASP Authorisation",
+            "jurisdictions": [
+              "LT",
+              "EE",
+              "CY"
+            ]
+          }
+        ]
+      },
+      "workforce": {
+        "headcount": 335,
+        "headcountBasis": "FTE"
+      },
+      "financials": {
+        "currency": "USD",
+        "annualRevenue": "USD 62.16M",
+        "totalAssets": "USD 430.19M"
+      },
+      "footprint": {
+        "countriesOfOperation": [
+          "GB",
+          "SG",
+          "FR",
+          "CA",
+          "ZA",
+          "AU",
+          "ES"
+        ],
+        "operationCount": 7
+      },
+      "attributes": [
+        {
+          "name": "risk_level",
+          "value": "Medium"
+        },
+        {
+          "name": "entity_role",
+          "value": "OPERATING"
+        }
+      ]
+    },
+    {
+      "dcId": "263012976860",
+      "relationships": {
+        "parentGroup": {
+          "ref": "groupId",
+          "value": "208399264973",
+          "role": "HOLDING"
+        }
+      },
+      "registration": {
+        "legalName": "TranWire Tech Holding S.à r.l.",
+        "status": "ACTIVE",
+        "incorporation": {
+          "country": "Malta",
+          "iso2": "MT"
+        },
+        "incorporatedOn": "2025-04-01",
+        "createdEpochMs": 1743465600000
+      },
+      "classification": {
+        "vertical": "Holding",
+        "industry": "Holding Company / Group Treasury"
+      },
+      "regulatory": {
+        "licensed": false,
+        "licences": []
+      },
+      "workforce": {
+        "headcount": 5,
+        "headcountBasis": "FTE"
+      },
+      "financials": {
+        "currency": "USD",
+        "annualRevenue": "USD 7.99M",
+        "totalAssets": "USD 484.45M"
+      },
+      "footprint": {
+        "countriesOfOperation": [
+          "GB"
+        ],
+        "operationCount": 1
+      },
+      "attributes": [
+        {
+          "name": "risk_level",
+          "value": "Medium"
+        },
+        {
+          "name": "entity_role",
+          "value": "HOLDING"
+        }
+      ]
+    },
+    {
+      "dcId": "263020963028",
+      "relationships": {
+        "parentGroup": {
+          "ref": "groupId",
+          "value": "208399264973",
+          "role": "OPERATING"
+        }
+      },
+      "registration": {
+        "legalName": "TranWire Tech Operations Ltd",
+        "status": "SUSPENDED",
+        "incorporation": {
+          "country": "Cayman Islands",
+          "iso2": "KY"
+        },
+        "incorporatedOn": "2023-09-19",
+        "createdEpochMs": 1695081600000
+      },
+      "classification": {
+        "vertical": "MSB",
+        "industry": "Money Service Business"
+      },
+      "regulatory": {
+        "licensed": true,
+        "licences": [
+          {
+            "type": "Money Transmitter License (MTL)",
+            "jurisdictions": [
+              "US"
+            ]
+          },
+          {
+            "type": "Electronic Money Institution (EMI)",
+            "jurisdictions": [
+              "LT",
+              "GB",
+              "IE"
+            ]
+          }
+        ]
+      },
+      "workforce": {
+        "headcount": 455,
+        "headcountBasis": "FTE"
+      },
+      "financials": {
+        "currency": "USD",
+        "annualRevenue": "USD 235.70M",
+        "totalAssets": "USD 66.31M"
+      },
+      "footprint": {
+        "countriesOfOperation": [
+          "AE",
+          "MX",
+          "SG"
+        ],
+        "operationCount": 3
+      },
+      "attributes": [
+        {
+          "name": "risk_level",
+          "value": "Medium"
+        },
+        {
+          "name": "entity_role",
+          "value": "OPERATING"
+        }
+      ]
+    }
+  ]
+}
