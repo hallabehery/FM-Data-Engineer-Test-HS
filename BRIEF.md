@@ -2,11 +2,11 @@
 
 ## Context
 
-You've joined the data team at **Freemarket**, a cross-border payments network. 
+You've joined the data team at **Freemarket**, a payments network. 
 Money moves as **deposits** and **withdrawals** through corporate entities ("direct companies") 
 that belong to **parent groups**, transacting with **counterparties** in many currencies.
 
-Finance, BI and Commercial all want the same thing and don't have it: a clean,
+Commercial and Finance leaders want the same thing and don't have it: a clean,
 **GBP-normalised**, trustworthy data layer they can trust to answer "who is moving
 how much money with whom, and when". Your job is to build that layer from the raw
 sources using **DuckDB**, shaping data with a mix of **SQL and Python** across a
@@ -16,6 +16,11 @@ can drive a **relationship-network view** of money flow.
 This is a senior role. We care about how you handle messy data, how cleanly you execute
 the build, and the quality and trustworthiness of the finished artefact. Build it the way
 the data team's working notes (`docs/`) set out.
+
+## Ground rules
+
+- **AI tools are allowed and encouraged** — our team works AI-first. We care about *how*
+  you work with AI
 
 ---
 
@@ -62,7 +67,7 @@ A reference picture of the target view is provided: **`docs/star_map_snapshot.pn
 In that view:
 
 - The **focal group** represents the Group company, which may contain multiple legal entities within. 
-  ultimatly we want to be able to drill down a level when needed
+  ultimately we want to be able to drill down a level when needed
 - **Other groups** that transact with our focal groups appear as **circle nodes** around the centre.
   Some clients transact with each other, group to group, hence it should be clearly visible in the 
   data set
@@ -71,7 +76,7 @@ In that view:
 - **Edges are directed** and carry the **GBP-normalised volume** and the **transaction
   count** between the focal group and each counterpart (e.g. *"£141.3M (415x) Fee: £15.5k"*).
   Deposits and withdrawals give the direction of flow. 
-  Finance will most deifiently want to know how much revenue we earned on those.
+  Finance will most definitely want to know how much revenue we earned on those.
 
 
 ## Documentation is a first-class deliverable (required)
@@ -79,6 +84,7 @@ In that view:
 Every Medallion decision must be written down so that someone else
 could understand and trust your pipeline:
 
+- If this was live source data stream what would be selected ingestion strategy
 - Layer boundaries — what you placed in Bronze vs Silver vs Gold, and why.
 - Each transformation and the reasoning behind it.
 - How you handled the data quality issues you found — **dropped / quarantined / kept**,
@@ -100,12 +106,7 @@ Before you start building, read `docs/` for outputs and build framework and foll
 | **Design** | The Gold model — does the output cleanly satisfy the network deliverable for any group / period? |
 | **Code & Build** | Correct, readable SQL + Python; sound FX as-of join; the joins reconciled. |
 | **Documentation** | The write-up: clear, honest, enough to trust the pipeline. |
-| **Presentation** | Your live walkthrough of methodology, model and the resulting view. |
-
-## Ground rules
-
-- **AI tools are allowed and encouraged** — our team works AI-first. We care about *how*
-  you work with AI
+| **Presentation** | We will discuss your approach/methodology, decisions made and overall feedback on the test. |
 
 Start with `SETUP.md` to get your environment running, then build your pipeline in a notebook under `notebooks/`.
 
