@@ -1,13 +1,13 @@
 # Tickets: Freemarket Relationship-Network Data Layer
 
-Builds the Bronze → Silver → Gold (Medallion) DuckDB pipeline specified in `submission/SPEC.md`:
+Builds the Bronze → Silver → Gold (Medallion) DuckDB pipeline specified in `plan/SPEC.md`:
 ingest four raw sources, normalise every amount to GBP via a point-in-time FX join, and land a
 Gold nodes + directed-edges dataset that drives the money-flow network view.
 
 Work the **frontier**: any ticket whose blockers are all done. Foundation goes first; once it
 lands, the FX unit and both JSON unpicks open up and can be picked up in parallel.
 
-**Engineering standards (apply to every ticket).** Per `submission/SPEC.md` § Engineering Standards,
+**Engineering standards (apply to every ticket).** Per `plan/SPEC.md` § Engineering Standards,
 and *without* restructuring the mandated six-schema layout: transformation logic lives in tested
 `src/` modules (the notebook orchestrates and narrates); every step is idempotent
 (`CREATE OR REPLACE`), deterministic, and re-runnable from an empty warehouse; each ingestion
@@ -16,7 +16,7 @@ reason); and tests/invariants for a layer are written *with* that layer, runnabl
 
 ---
 
-## Pipeline foundation — warehouse, six schemas & engineering scaffolding
+## ~~Pipeline foundation — warehouse, six schemas & engineering scaffolding~~ ✅ DONE (`feature/pipeline-foundation`)
 
 **What to build:** A working DuckDB warehouse and the engineering scaffolding every later ticket
 builds on: anyone can clone, run one documented command, and get an empty warehouse with all six
@@ -25,12 +25,12 @@ so no later ticket has to invent it.
 
 **Blocked by:** None — can start immediately.
 
-- [ ] `warehouse.duckdb` is created on connect and reopens cleanly; re-running never errors
-- [ ] The six schemas `raw`, `live`, `core`, `shape`, `data_mart`, `curated` all exist
-- [ ] A single config surface holds DB path, FX file + `maximum_object_size`, coverage window, and period (no scattered literals or absolute paths)
-- [ ] A `src/` package is importable from the notebook; the notebook is a thin orchestrator
-- [ ] A single documented command runs the pipeline and the test suite; dependencies are pinned
-- [ ] A lightweight logging/reporting helper exists for per-stage row-count and DQ counts
+- [x] `warehouse.duckdb` is created on connect and reopens cleanly; re-running never errors
+- [x] The six schemas `raw`, `live`, `core`, `shape`, `data_mart`, `curated` all exist
+- [x] A single config surface holds DB path, FX file + `maximum_object_size`, coverage window, and period (no scattered literals or absolute paths)
+- [x] A `src/` package is importable from the notebook; the notebook is a thin orchestrator
+- [x] A single documented command runs the pipeline and the test suite; dependencies are pinned
+- [x] A lightweight logging/reporting helper exists for per-stage row-count and DQ counts
 
 ## FX as-of conversion unit (pure, tested)
 
