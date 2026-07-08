@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import duckdb
 
-from . import config, silver_core, warehouse
+from . import bronze, config, silver_core, warehouse
 from .reporting import logger
 
 
@@ -25,6 +25,7 @@ def main() -> None:
     con = warehouse.connect()
     try:
         build_foundation(con)
+        bronze.build_raw_monthly(con)
         silver_core.build_companies(con)
         silver_core.build_groups(con)
     finally:

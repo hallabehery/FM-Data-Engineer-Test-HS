@@ -49,18 +49,18 @@ on it.
 - [x] Unit tests cover: exact boundary (from-inclusive, till-exclusive), mid-interval, GBP=1.0,
       out-of-coverage, and an unsorted-points case
 
-## Bronze `raw` — transactional sheets split per month
+## ~~Bronze `raw` — transactional sheets split per month~~ ✅ DONE (`feature/bronze-raw-monthly-split`)
 
 **What to build:** The Deposit and Withdrawals sheets landed as one small table per calendar month
 (July–December 2025), so an issue in a single month can be fixed in a small table and flow downstream.
 
 **Blocked by:** Pipeline foundation — warehouse, six schemas & engineering scaffolding.
 
-- [ ] Expected sheet columns are validated before landing; a missing/renamed column fails loudly
-- [ ] Deposit rows land in six month tables (Jul–Dec) under `raw`
-- [ ] Withdrawals rows land in six month tables (Jul–Dec) under `raw`
-- [ ] Every source row lands in exactly one month table (no loss, no duplication)
-- [ ] Month assignment is driven by the transaction's own period, documented
+- [x] Expected sheet columns are validated before landing; a missing/renamed column fails loudly
+- [x] Deposit rows land in six month tables (Jul–Dec) under `raw`
+- [x] Withdrawals rows land in six month tables (Jul–Dec) under `raw`
+- [x] Every source row lands in exactly one month table (no loss, no duplication)
+- [x] Month assignment is driven by the transaction's own period, documented
 
 ## Bronze `live` — consolidate deposits/withdrawals + land counterparty & fees
 
