@@ -94,6 +94,12 @@ Excel Fees ───────────────────────
 - **Dimension, not inline columns.** The rate points are persisted as `core.exchange_rate`
   (`rate_id, valid_from/till (+ *_ms), rate`), and the match per fact lives in `core.<stream>_fx`.
   Facts stay pure; GBP is computed in `shape`.
+- **Why a separate match table** (rather than resolving FX only in `shape`): it mirrors the
+  build-protocol's two steps — `core` *attaches* the rate (selection: the as-of match →
+  `core.<stream>_fx`), `shape` *applies* it (`× rate` → GBP). This separates the two failure modes
+  (wrong rate *selected* vs wrong *arithmetic*) into two inspectable stages, and keeps `core.deposit`
+  a pure fact. The alternative — fold match + apply into `shape` — is fewer tables but collapses those
+  two steps and deviates from the protocol's `core`-attaches-FX step.
 - **Lineage.** `core.<stream>_fx.fx_rate_id` → `core.exchange_rate.rate_id` traces each transaction to
   the exact rate point (and its validity window) that priced it.
 - **Quarantine reasons** (never silently mis-price): `fx_out_of_coverage`, `fx_unknown_currency`,
