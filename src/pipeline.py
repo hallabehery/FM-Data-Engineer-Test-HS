@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import duckdb
 
-from . import config, warehouse
+from . import config, silver_core, warehouse
 from .reporting import logger
 
 
@@ -20,14 +20,15 @@ def build_foundation(con: duckdb.DuckDBPyConnection) -> tuple[str, ...]:
 
 
 def main() -> None:
-    """Build the pipeline end-to-end (foundation only, for now)."""
-    logger.info(f"[foundation] opening warehouse at {config.WAREHOUSE_PATH}")
+    """Build the pipeline end-to-end (foundation → Silver core, so far)."""
+    logger.info(f"opening warehouse at {config.WAREHOUSE_PATH}")
     con = warehouse.connect()
     try:
         build_foundation(con)
+        silver_core.build_companies(con)
     finally:
         con.close()
-    logger.info("[foundation] done")
+    logger.info("pipeline done")
 
 
 if __name__ == "__main__":

@@ -75,17 +75,17 @@ alignment is by name, never position (the two sheets differ in column order).
 - [ ] Counterparty and fees are landed and queryable
 - [ ] Conservation: Σ(rows across the month tables) = rows in the consolidated table, per stream
 
-## Silver `core` — companies JSON unpick
+## ~~Silver `core` — companies JSON unpick~~ ✅ DONE (`feature/silver-core-companies-unpick`)
 
 **What to build:** The nested `companies.json` unpicked into a flat, queryable direct-company table,
 including the bridge key to its parent group, so the hierarchy can be resolved downstream.
 
 **Blocked by:** Pipeline foundation — warehouse, six schemas & engineering scaffolding.
 
-- [ ] One row per company keyed on `dcId`, no duplicates
-- [ ] Nested registration / classification / financials / footprint fields become columns
-- [ ] `relationships.parentGroup.value` is exposed as the group bridge key
-- [ ] Row count matches the source record count
+- [x] One row per company keyed on `dcId`, no duplicates
+- [x] Nested registration / classification / financials / footprint fields become columns
+- [x] `relationships.parentGroup.value` is exposed as the group bridge key
+- [x] Row count matches the source record count
 
 ## Silver `core` — groups JSON unpick (first pass)
 
