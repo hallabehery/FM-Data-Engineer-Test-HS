@@ -26,6 +26,7 @@ def main() -> None:
     try:
         build_foundation(con)
         bronze.build_raw_monthly(con)
+        bronze.build_live(con)
         silver_core.build_companies(con)
         silver_core.build_groups(con)
     finally:

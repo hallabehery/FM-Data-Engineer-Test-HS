@@ -62,7 +62,7 @@ on it.
 - [x] Every source row lands in exactly one month table (no loss, no duplication)
 - [x] Month assignment is driven by the transaction's own period, documented
 
-## Bronze `live` — consolidate deposits/withdrawals + land counterparty & fees
+## ~~Bronze `live` — consolidate deposits/withdrawals + land counterparty & fees~~ ✅ DONE (`feature/bronze-live-consolidation`, #6)
 
 **What to build:** A single `deposits` table and a single `withdrawals` table that bring every month
 back together in one place, plus the counterparty dimension and fees landed for downstream use. Column
@@ -70,10 +70,10 @@ alignment is by name, never position (the two sheets differ in column order).
 
 **Blocked by:** Bronze `raw` — transactional sheets split per month.
 
-- [ ] `live.deposits` and `live.withdrawals` each consolidate all six months
-- [ ] Consolidation aligns columns by name, not position
-- [ ] Counterparty and fees are landed and queryable
-- [ ] Conservation: Σ(rows across the month tables) = rows in the consolidated table, per stream
+- [x] `live.deposits` and `live.withdrawals` each consolidate all six months
+- [x] Consolidation aligns columns by name, not position
+- [x] Counterparty and fees are landed and queryable
+- [x] Conservation: Σ(rows across the month tables) = rows in the consolidated table, per stream
 
 ## ~~Silver `core` — companies JSON unpick~~ ✅ DONE (`feature/silver-core-companies-unpick`)
 

@@ -38,6 +38,14 @@ EXPECTED_COLUMNS: frozenset[str] = frozenset(
     }
 )
 
+# Dimension / fee sheets landed directly into `live` (not monthly-split).
+EXPECTED_COUNTERPARTY_COLUMNS: frozenset[str] = frozenset(
+    {"CP ID", "CP name", "CP vertical", "CP website", "CP business desc", "Group ID", "DC Id"}
+)
+EXPECTED_FEES_COLUMNS: frozenset[str] = frozenset(
+    {"FeeId", "Type", "Date", "FeeDetail", "Fee amount (CCY)", "Fee currency", "Link Id"}
+)
+
 
 def _read_relation(xlsx, sheet: str) -> str:
     return f"read_xlsx('{xlsx}', sheet='{sheet}')"
@@ -105,4 +113,68 @@ def build_raw_monthly(con: duckdb.DuckDBPyConnection) -> list[StageReport]:
             )
         )
 
+    return reports
+
+
+def _land_sheet(
+    con: duckdb.DuckDBPyConnection,
+    sheet: str,
+    table: str,
+    expected: frozenset[str],
+) -> StageReport:
+    """Land a whole sheet as-is into `table` (all-VARCHAR raw fidelity)."""
+    xlsx = config.TRANSACTIONS_XLSX
+    # Read as all-VARCHAR: e.g. the Counterparty `CP website` column is mostly
+    # empty and defeats type inference (a URL can't cast to the inferred DOUBLE).
+    # Bronze lands raw; downstream layers cast as needed.
+    relation = f"read_xlsx('{xlsx}', sheet='{sheet}', all_varchar=true)"
+    cols = {row[0] for row in con.execute(f"DESCRIBE SELECT * FROM {relation}").fetchall()}
+    missing = expected - cols
+    if missing:
+        raise ValueError(f"{sheet!r} sheet missing expected columns: {sorted(missing)}")
+
+    con.execute(f"CREATE OR REPLACE TABLE {table} AS SELECT * FROM {relation}")
+    rows = con.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
+    return report_stage(f"bronze.{table}", rows_in=rows, rows_out=rows, kept=rows)
+
+
+def build_live(con: duckdb.DuckDBPyConnection) -> list[StageReport]:
+    """Consolidate the per-month raw tables into single `live` tables, and land
+    the counterparty and fees sheets. Idempotent.
+
+    Consolidation uses `UNION ALL BY NAME` so columns align on name, never
+    position (the source sheets differ in column order). Raises if a stream's
+    consolidated row count does not match the sum of its month tables.
+    """
+    con.execute("INSTALL excel; LOAD excel;")
+    reports: list[StageReport] = []
+
+    for stream in SHEETS.values():  # "deposits", "withdrawals"
+        month_tables = [
+            f"raw.{stream}_{ym.replace('-', '_')}" for ym in config.PERIOD_MONTHS
+        ]
+        union_sql = " UNION ALL BY NAME ".join(
+            f"SELECT * FROM {t}" for t in month_tables
+        )
+        con.execute(f"CREATE OR REPLACE TABLE live.{stream} AS {union_sql}")
+
+        raw_total = sum(
+            con.execute(f"SELECT COUNT(*) FROM {t}").fetchone()[0] for t in month_tables
+        )
+        live_total = con.execute(f"SELECT COUNT(*) FROM live.{stream}").fetchone()[0]
+        if live_total != raw_total:
+            raise ValueError(
+                f"live.{stream}: consolidated {live_total} rows but month tables hold {raw_total}"
+            )
+        reports.append(
+            report_stage(
+                f"bronze.live.{stream}", rows_in=raw_total, rows_out=live_total, kept=live_total
+            )
+        )
+
+    # Dimension + fee sheets land directly into `live` for downstream use.
+    reports.append(
+        _land_sheet(con, "Counterparty", "live.counterparty", EXPECTED_COUNTERPARTY_COLUMNS)
+    )
+    reports.append(_land_sheet(con, "Fees", "live.fees", EXPECTED_FEES_COLUMNS))
     return reports
