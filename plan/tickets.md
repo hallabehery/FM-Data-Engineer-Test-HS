@@ -87,7 +87,7 @@ including the bridge key to its parent group, so the hierarchy can be resolved d
 - [x] `relationships.parentGroup.value` is exposed as the group bridge key
 - [x] Row count matches the source record count
 
-## Silver `core` — groups JSON unpick (first pass)
+## ~~Silver `core` — groups JSON unpick (first pass)~~ ✅ DONE (`feature/silver-core-groups-unpick`)
 
 **What to build:** The nested `groups.json` (records under `result.groups`) unpicked into a flat,
 queryable group table, with the raw heterogeneous `attributes` carried forward in a shape that a later
@@ -95,10 +95,10 @@ cleanup step can normalise.
 
 **Blocked by:** Pipeline foundation — warehouse, six schemas & engineering scaffolding.
 
-- [ ] One row per group keyed on `groupId`, no duplicates
-- [ ] Profile / segmentation / lifecycle fields become columns
-- [ ] Ingestion does not break on the scalar-or-object `attributes` values
-- [ ] Row count matches the source record count
+- [x] One row per group keyed on `groupId`, no duplicates
+- [x] Profile / segmentation / lifecycle fields become columns
+- [x] Ingestion does not break on the scalar-or-object `attributes` values
+- [x] Row count matches the source record count
 
 ## Silver `core` — FX rate attached to transactions & fees
 
