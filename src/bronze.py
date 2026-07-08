@@ -121,13 +121,18 @@ def _land_sheet(
     sheet: str,
     table: str,
     expected: frozenset[str],
+    all_varchar: bool = False,
 ) -> StageReport:
-    """Land a whole sheet as-is into `table` (all-VARCHAR raw fidelity)."""
+    """Land a whole sheet as-is into `table`.
+
+    `all_varchar=True` is used only where type inference breaks — e.g. the
+    Counterparty `CP website` column is mostly empty and a URL can't cast to the
+    inferred DOUBLE. Other sheets (e.g. Fees) keep inference so dates/amounts land
+    typed rather than as raw Excel serials.
+    """
     xlsx = config.TRANSACTIONS_XLSX
-    # Read as all-VARCHAR: e.g. the Counterparty `CP website` column is mostly
-    # empty and defeats type inference (a URL can't cast to the inferred DOUBLE).
-    # Bronze lands raw; downstream layers cast as needed.
-    relation = f"read_xlsx('{xlsx}', sheet='{sheet}', all_varchar=true)"
+    options = ", all_varchar=true" if all_varchar else ""
+    relation = f"read_xlsx('{xlsx}', sheet='{sheet}'{options})"
     cols = {row[0] for row in con.execute(f"DESCRIBE SELECT * FROM {relation}").fetchall()}
     missing = expected - cols
     if missing:
@@ -173,8 +178,13 @@ def build_live(con: duckdb.DuckDBPyConnection) -> list[StageReport]:
         )
 
     # Dimension + fee sheets land directly into `live` for downstream use.
+    # Counterparty needs all-VARCHAR (CP website defeats inference); Fees keeps
+    # inference so its Date/amount land typed, not as Excel serials.
     reports.append(
-        _land_sheet(con, "Counterparty", "live.counterparty", EXPECTED_COUNTERPARTY_COLUMNS)
+        _land_sheet(
+            con, "Counterparty", "live.counterparty",
+            EXPECTED_COUNTERPARTY_COLUMNS, all_varchar=True,
+        )
     )
     reports.append(_land_sheet(con, "Fees", "live.fees", EXPECTED_FEES_COLUMNS))
     return reports

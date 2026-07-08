@@ -100,7 +100,7 @@ cleanup step can normalise.
 - [x] Ingestion does not break on the scalar-or-object `attributes` values
 - [x] Row count matches the source record count
 
-## Silver `core` — FX rate attached to transactions & fees
+## ~~Silver `core` — FX rate attached to transactions & fees~~ ✅ DONE (`feature/silver-core-fx-attach`, #8)
 
 **What to build:** Every transaction and fee row carries the correct as-of FX rate for its own
 currency and timestamp, attached but not yet applied — a clear, inspectable first step before GBP is
@@ -108,11 +108,11 @@ computed. Instants with no rate are flagged for quarantine rather than silently 
 
 **Blocked by:** FX as-of conversion unit (pure, tested); Bronze `live` — consolidate deposits/withdrawals + land counterparty & fees.
 
-- [ ] Each deposit/withdrawal row has the rate effective at its settlement instant attached
-- [ ] Each fee row has the rate for its currency and date attached
-- [ ] The settlement instant used for the as-of match is chosen and documented
-- [ ] Rows whose instant has no rate are flagged with a quarantine reason (not dropped here)
-- [ ] Conservation: attaching rates neither adds nor drops rows (row count in = row count out)
+- [x] Each deposit/withdrawal row has the rate effective at its settlement instant attached
+- [x] Each fee row has the rate for its currency and date attached
+- [x] The settlement instant used for the as-of match is chosen and documented
+- [x] Rows whose instant has no rate are flagged with a quarantine reason (not dropped here)
+- [x] Conservation: attaching rates neither adds nor drops rows (row count in = row count out)
 
 ## Silver `shape` — heterogeneous attribute cleanup
 
