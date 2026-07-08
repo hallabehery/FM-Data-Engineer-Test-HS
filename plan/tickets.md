@@ -32,7 +32,7 @@ so no later ticket has to invent it.
 - [x] A single documented command runs the pipeline and the test suite; dependencies are pinned
 - [x] A lightweight logging/reporting helper exists for per-stage row-count and DQ counts
 
-## FX as-of conversion unit (pure, tested)
+## ~~FX as-of conversion unit (pure, tested)~~ ✅ DONE (`feature/fx-as-of-conversion`)
 
 **What to build:** An isolated, independently-testable conversion that, given a currency and an
 instant, returns the GBP rate effective at that instant — or an explicit quarantine reason when no
@@ -41,12 +41,12 @@ on it.
 
 **Blocked by:** Pipeline foundation — warehouse, six schemas & engineering scaffolding.
 
-- [ ] Loads `exchange_rates.json` with a raised `maximum_object_size` (default 16 MB is too small)
-- [ ] Range-matches `validFrom <= t < validTill` on points that are NOT pre-sorted
-- [ ] `rateStr` is stripped of its JSON quotes before conversion; `GBP = amount × float(rateStr)`
-- [ ] `GBP` returns rate `1.0` (no series in the file)
-- [ ] An instant outside `meta.coverage` or in a gap returns a quarantine reason, never a wrong number
-- [ ] Unit tests cover: exact boundary (from-inclusive, till-exclusive), mid-interval, GBP=1.0,
+- [x] Loads `exchange_rates.json` with a raised `maximum_object_size` (default 16 MB is too small)
+- [x] Range-matches `validFrom <= t < validTill` on points that are NOT pre-sorted
+- [x] `rateStr` is stripped of its JSON quotes before conversion; `GBP = amount × float(rateStr)`
+- [x] `GBP` returns rate `1.0` (no series in the file)
+- [x] An instant outside `meta.coverage` or in a gap returns a quarantine reason, never a wrong number
+- [x] Unit tests cover: exact boundary (from-inclusive, till-exclusive), mid-interval, GBP=1.0,
       out-of-coverage, and an unsorted-points case
 
 ## Bronze `raw` — transactional sheets split per month
