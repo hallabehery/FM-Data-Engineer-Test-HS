@@ -113,6 +113,7 @@ computed. Instants with no rate are flagged for quarantine rather than silently 
 - [x] The settlement instant used for the as-of match is chosen and documented
 - [x] Rows whose instant has no rate are flagged with a quarantine reason (not dropped here)
 - [x] Conservation: attaching rates neither adds nor drops rows (row count in = row count out)
+- [x] FX lineage: rate points persisted as `core.exchange_rates`; each row carries `fx_rate_id` to trace the exact rate used
 
 ## Silver `shape` — heterogeneous attribute cleanup
 

@@ -45,6 +45,43 @@ def test_rows_conserved_and_each_row_priced_or_flagged(con):
 
 
 @SKIP
+def test_exchange_rates_table_and_lineage(con):
+    silver_core.build_exchange_rates(con)
+    silver_core.build_fx_attached(con)
+
+    # The rates table holds every point from the file (meta.rowCount = 161342).
+    n_points = con.execute("SELECT COUNT(*) FROM core.exchange_rates").fetchone()[0]
+    assert n_points == 161342
+    # rate_id uniquely identifies a point.
+    distinct_ids = con.execute(
+        "SELECT COUNT(DISTINCT rate_id) FROM core.exchange_rates"
+    ).fetchone()[0]
+    assert distinct_ids == n_points
+
+    # Lineage: every priced deposit's fx_rate_id resolves to a rate point, and the
+    # attached rate + instant fall inside that point's validity window.
+    bad = con.execute(
+        """
+        SELECT COUNT(*)
+        FROM core.deposits d
+        JOIN core.exchange_rates r ON d.fx_rate_id = r.rate_id
+        WHERE d.fx_rate <> r.rate
+           OR d.fx_instant_ms < r.valid_from_ms
+           OR d.fx_instant_ms >= r.valid_till_ms
+        """
+    ).fetchone()[0]
+    assert bad == 0
+    # Every non-GBP priced row has a rate_id; GBP rows have rate 1.0 and no rate_id.
+    orphan = con.execute(
+        """
+        SELECT COUNT(*) FROM core.deposits
+        WHERE fx_rate IS NOT NULL AND "Tx Currency" <> 'GBP' AND fx_rate_id IS NULL
+        """
+    ).fetchone()[0]
+    assert orphan == 0
+
+
+@SKIP
 def test_gbp_rows_get_identity_rate(con):
     silver_core.build_fx_attached(con)
     bad = con.execute(

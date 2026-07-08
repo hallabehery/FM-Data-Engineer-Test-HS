@@ -135,6 +135,35 @@ _TXN_INSTANT_SQL = 'epoch_ms(CAST("Tx Date" AS DATE) + "Tx Time")'
 _FEE_INSTANT_SQL = 'epoch_ms("Date")'
 
 
+def build_exchange_rates(con: duckdb.DuckDBPyConnection) -> StageReport:
+    """Land the FX rate points as `core.exchange_rates` (one row per rate interval).
+
+    Persists the same rate data the FX unit uses, so a transaction's `fx_rate_id`
+    can be joined back to the exact interval (currency, valid window, rate) that
+    priced it — full FX lineage. Idempotent.
+    """
+    rates = fx.FxRates.load()
+    points = pd.DataFrame(rates.points())
+    points["valid_from"] = pd.to_datetime(points["valid_from_ms"], unit="ms", utc=True)
+    points["valid_till"] = pd.to_datetime(points["valid_till_ms"], unit="ms", utc=True)
+
+    con.register("_fx_points", points)
+    try:
+        con.execute(
+            """
+            CREATE OR REPLACE TABLE core.exchange_rates AS
+            SELECT currency, rate_id, valid_from_ms, valid_till_ms,
+                   valid_from, valid_till, rate
+            FROM _fx_points
+            """
+        )
+    finally:
+        con.unregister("_fx_points")
+
+    n = con.execute("SELECT COUNT(*) FROM core.exchange_rates").fetchone()[0]
+    return report_stage("silver.core.exchange_rates", rows_in=n, rows_out=n, kept=n)
+
+
 def _attach_fx(
     con: duckdb.DuckDBPyConnection,
     rates: fx.FxRates,
@@ -158,24 +187,31 @@ def _attach_fx(
     ).df()
 
     fx_rate: list[float | None] = []
+    rate_id: list[object | None] = []
     reason: list[str | None] = []
     for currency, instant in zip(lookup["_ccy"], lookup["_instant"]):
         if pd.isna(currency):
             fx_rate.append(None)
+            rate_id.append(None)
             reason.append(REASON_MISSING_CURRENCY)
             continue
         if pd.isna(instant):
             fx_rate.append(None)
+            rate_id.append(None)
             reason.append(REASON_MISSING_INSTANT)
             continue
         result = rates.rate_at(str(currency), int(instant))
         fx_rate.append(result.rate)
+        rate_id.append(result.rate_id)
         reason.append(result.quarantine_reason)
 
     lookup["fx_rate"] = fx_rate
+    # Nullable integer so it joins cleanly to core.exchange_rates.rate_id (GBP and
+    # quarantined rows have no rate point → NULL).
+    lookup["fx_rate_id"] = pd.array(rate_id, dtype="Int64")
     lookup["fx_quarantine_reason"] = reason
     fx_map = lookup.rename(columns={"_instant": "fx_instant_ms"})[
-        ["_k", "fx_instant_ms", "fx_rate", "fx_quarantine_reason"]
+        ["_k", "fx_instant_ms", "fx_rate_id", "fx_rate", "fx_quarantine_reason"]
     ]
 
     con.register("_fx_map", fx_map)
@@ -183,7 +219,7 @@ def _attach_fx(
         con.execute(
             f"""
             CREATE OR REPLACE TABLE {target} AS
-            SELECT s.*, f.fx_instant_ms, f.fx_rate, f.fx_quarantine_reason
+            SELECT s.*, f.fx_instant_ms, f.fx_rate_id, f.fx_rate, f.fx_quarantine_reason
             FROM {source} s
             JOIN _fx_map f ON s.{key_col} = f._k
             """

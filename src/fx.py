@@ -34,11 +34,17 @@ REASON_GAP = "fx_no_rate_point"
 
 @dataclass(frozen=True)
 class RateResult:
-    """Outcome of an as-of rate lookup: either a `rate` or a `quarantine_reason`."""
+    """Outcome of an as-of rate lookup: either a `rate` or a `quarantine_reason`.
+
+    `rate_id` identifies the exact rate point that matched (for lineage). It is
+    `None` for GBP (the base — rate is 1.0 by definition, with no rate point) and
+    for quarantined lookups.
+    """
 
     currency: str
     instant_ms: int
     rate: float | None = None
+    rate_id: object | None = None
     quarantine_reason: str | None = None
 
     @property
@@ -97,15 +103,21 @@ class FxRates:
         coverage_till_ms: int,
     ) -> "FxRates":
         """Build from a `{ccy: {"points": [...] }}` dict and its tuple field order."""
+        i_id = field_order.index("rateId")
         i_from = field_order.index("validFromEpochMs")
         i_till = field_order.index("validTillEpochMs")
         i_rate = field_order.index("rateStr")
-        intervals: dict[str, list[tuple[int, int, float]]] = {}
+        intervals: dict[str, list[tuple]] = {}
         for ccy, obj in series.items():
             rows = []
             for point in obj["points"]:
                 rows.append(
-                    (int(point[i_from]), int(point[i_till]), _parse_rate(point[i_rate]))
+                    (
+                        int(point[i_from]),
+                        int(point[i_till]),
+                        _parse_rate(point[i_rate]),
+                        point[i_id],
+                    )
                 )
             intervals[ccy] = rows
         return cls(intervals, coverage_from_ms, coverage_till_ms)
@@ -144,6 +156,27 @@ class FxRates:
             json.loads(row[3]), field_order, int(row[1]), int(row[2])
         )
 
+    # -- materialisation ------------------------------------------------------
+    def points(self) -> list[dict]:
+        """Return every rate point as a flat record, for landing as a table.
+
+        One row per interval: `currency, rate_id, valid_from_ms, valid_till_ms, rate`.
+        Enables lineage — a transaction's `fx_rate_id` joins back to the exact point.
+        """
+        records: list[dict] = []
+        for currency, intervals in self._intervals.items():
+            for valid_from, valid_till, rate, rate_id in intervals:
+                records.append(
+                    {
+                        "currency": currency,
+                        "rate_id": rate_id,
+                        "valid_from_ms": valid_from,
+                        "valid_till_ms": valid_till,
+                        "rate": rate,
+                    }
+                )
+        return records
+
     # -- lookup ---------------------------------------------------------------
     def rate_at(self, currency: str, instant_ms: int) -> RateResult:
         """Resolve the rate for `currency` at `instant_ms`, or a quarantine reason."""
@@ -166,9 +199,9 @@ class FxRates:
         starts = self._starts[currency]
         idx = bisect.bisect_right(starts, instant_ms) - 1
         if idx >= 0:
-            valid_from, valid_till, rate = self._intervals[currency][idx]
+            valid_from, valid_till, rate, rate_id = self._intervals[currency][idx]
             if valid_from <= instant_ms < valid_till:
-                return RateResult(currency, instant_ms, rate=rate)
+                return RateResult(currency, instant_ms, rate=rate, rate_id=rate_id)
 
         # Within coverage but no point spans this instant → a gap in the series.
         return RateResult(currency, instant_ms, quarantine_reason=REASON_GAP)

@@ -49,6 +49,14 @@ def test_mid_interval():
     assert fx.rate_at("EUR", 150).rate == 1.5
 
 
+def test_matched_result_carries_rate_id():
+    fx = _rates({"EUR": [["rid-1", 100, 200, '"1.5"', 0]]})
+    assert fx.rate_at("EUR", 150).rate_id == "rid-1"
+    # GBP and quarantined lookups have no rate point.
+    assert fx.rate_at("GBP", 150).rate_id is None
+    assert fx.rate_at("EUR", 9_999).rate_id is None
+
+
 def test_gbp_is_always_one():
     fx = _rates({"EUR": [_point(100, 200, "1.5")]})
     r = fx.rate_at("GBP", 10_000)  # even outside coverage, GBP is 1.0

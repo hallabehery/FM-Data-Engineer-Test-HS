@@ -29,6 +29,7 @@ def main() -> None:
         bronze.build_live(con)
         silver_core.build_companies(con)
         silver_core.build_groups(con)
+        silver_core.build_exchange_rates(con)
         silver_core.build_fx_attached(con)
     finally:
         con.close()
