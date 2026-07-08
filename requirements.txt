@@ -1,5 +1,12 @@
-duckdb>=1.1.0
-pandas>=2.0.0
-openpyxl>=3.1.0
-notebook>=7.0.0
-jupyterlab>=4.0.0
+# Pinned for reproducibility — see plan/SPEC.md § Engineering Standards.
+# Runtime
+duckdb==1.5.4
+pandas==3.0.3
+openpyxl==3.1.5
+# Notebook
+notebook==7.6.0
+jupyterlab==4.6.1
+nbconvert==7.17.1
+nbclient==0.11.0
+# Tests
+pytest==9.1.1
