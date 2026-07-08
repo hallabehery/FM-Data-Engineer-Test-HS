@@ -60,9 +60,10 @@ decision is documented in `submission/WRITEUP.md` so the pipeline can be trusted
     nested registration, relationship, and attribute fields become queryable columns.
 14. As a data engineer, I want heterogeneous `attributes` (scalar-or-object values)
     handled robustly, so that ingestion doesn't break on shape differences.
-15. As a data engineer, I want FX rates attached to each transaction/fee in Silver `core`
-    and the GBP amounts computed in Silver `shape`, so that normalisation is a clear,
-    inspectable two-step.
+15. As a data engineer, I want the transaction/fee **facts kept pure** and the FX as-of match
+    resolved into a separate per-stream table in Silver `core` (with the rate points landed as
+    an `exchange_rate` dimension), then GBP computed in Silver `shape`, so that normalisation is
+    a clear, inspectable two-step with traceable lineage.
 16. As a data engineer, I want out-of-coverage or unmatched FX instants handled
     explicitly (quarantined, not silently mis-priced), so that no wrong number reaches
     Gold unnoticed.
@@ -86,16 +87,20 @@ decision is documented in `submission/WRITEUP.md` so the pipeline can be trusted
 
 ## Implementation Decisions
 
-**Architecture (from `docs/build_protocol.md` — authoritative, do not "clean up"):**
+**Architecture (from `docs/build_protocol.md` — authoritative, do not "clean up").**
+See `plan/ARCHITECTURE.md` for the concrete table topology and data-flow diagram.
 - Six schemas created up front: Bronze = `raw` + `live`; Silver = `core` + `shape`;
   Gold = `data_mart` + `curated`.
 - Bronze `raw`: transactional sheets split into one table **per month** (Jul–Dec).
 - Bronze `live`: consolidate to single `deposits` and `withdrawals` tables. Deposit and
   Withdrawals sheets differ in column order — align on **column name**, never position.
-- Silver `core`: first-pass JSON unpicking of groups + companies; FX rate *attached* to
-  each transaction/fee row (as-of match), but GBP not yet computed.
-- Silver `shape`: remaining JSON cleanup; FX **applied** to produce GBP-normalised
-  amounts.
+- Silver `core`: first-pass JSON unpicking of groups + companies; clean typed **facts**
+  (`deposit`/`withdrawal`/`fee`) kept **pure**; the FX rate points landed as an
+  `exchange_rate` dimension; the as-of match *attached* per fact in **separate** `<stream>_fx`
+  tables (`deposit_fx`/`withdrawal_fx`/`fee_fx`) — never inline `fx_*` columns on a fact — but
+  GBP not yet computed.
+- Silver `shape`: remaining JSON cleanup; FX **applied** by joining each fact to its
+  `<stream>_fx` match (`gbp_amount = native × rate`), quarantining any unresolved row.
 - Gold `data_mart`: modelled/aggregated network data with a `source` provenance column;
   entity (client/group) tables may be combined here but transactional aggregation is the
   core. `curated` reads from `data_mart` only (never the reverse).
@@ -112,6 +117,12 @@ decision is documented in `submission/WRITEUP.md` so the pipeline can be trusted
   to make and document — not a question for the data-team lead.)
 - The FX conversion is implemented as an isolated, independently-testable unit (the
   primary risk surface).
+- The rate points are persisted as a `core.exchange_rate` dimension; the per-fact as-of
+  match lives in `core.<stream>_fx` (`fx_instant_ms`, `fx_rate_id`, `fx_rate`,
+  `fx_quarantine_reason`). Facts stay pure — no `fx_*` columns on the transaction/fee tables.
+- Lineage: `<stream>_fx.fx_rate_id` joins `exchange_rate.rate_id` back to the exact point used.
+- Settlement instant for the match: `Tx Date + Tx Time` for transactions; fee `Date`
+  (midnight, UTC) for fees.
 
 **Network model:**
 - Grain of the edge fact: `focal_group × counterpart × direction × period(month)`, with

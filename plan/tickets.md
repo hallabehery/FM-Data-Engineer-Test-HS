@@ -14,6 +14,27 @@ and *without* restructuring the mandated six-schema layout: transformation logic
 validates its expected columns before proceeding; nothing is silently dropped (quarantine with a
 reason); and tests/invariants for a layer are written *with* that layer, runnable as one pass.
 
+## Target warehouse layout (tables per schema)
+
+Naming shown in the clean singular / `snake_case` form (see the naming-cleanup issue). **Facts stay
+facts:** a transaction/fee table holds only its own columns — the FX rate is a *dimension*
+(`exchange_rate`) and the as-of match is a *separate* per-stream table, never inline columns on the
+fact. (This supersedes the earlier approach that put `fx_rate`/`fx_rate_id` on `core.deposit`.)
+
+| Layer.schema | Tables | Role |
+|---|---|---|
+| **bronze.raw** | `deposit_2025_07 … _12`, `withdrawal_2025_07 … _12` | raw per-month landings, values as-is |
+| **bronze.live** | `deposit`, `withdrawal`, `counterparty`, `fee` | consolidated / landed, still raw values |
+| **silver.core** | facts (pure): `deposit`, `withdrawal`, `fee` | typed & cleaned — no FX, no GBP |
+| | dims: `company`, `group`, `counterparty`, `exchange_rate` | unpicked / cleaned reference data |
+| | FX match (bridge): `deposit_fx`, `withdrawal_fx`, `fee_fx` | as-of result: `key, fx_instant_ms, fx_rate_id, fx_rate, fx_quarantine_reason` |
+| **silver.shape** | `deposit`, `withdrawal`, `fee` (GBP-normalised) | fact ⨝ its `*_fx` → `gbp_amount`; unresolved quarantined; entity attributes resolved |
+| **gold.data_mart** | `entity` (+`source`), `edge_fact` (+`source`) | counterpart→group resolution; `focal_group × counterpart × direction × month` measures |
+| **gold.curated** | `node`, `edge` | final network product (circles/diamonds + directed edges); reads only from `data_mart` |
+
+Flow: `raw` → `live` → `core` (facts + dims + FX match) → `shape` (apply FX → GBP) → `data_mart`
+(model/aggregate) → `curated` (nodes + edges).
+
 ---
 
 ## ~~Pipeline foundation — warehouse, six schemas & engineering scaffolding~~ ✅ DONE (`feature/pipeline-foundation`)
@@ -100,19 +121,23 @@ cleanup step can normalise.
 - [x] Ingestion does not break on the scalar-or-object `attributes` values
 - [x] Row count matches the source record count
 
-## Silver `core` — FX rate attached to transactions & fees
+## Silver `core` — clean facts, `exchange_rate` dim, and FX as-of match (facts stay pure)
 
-**What to build:** Every transaction and fee row carries the correct as-of FX rate for its own
-currency and timestamp, attached but not yet applied — a clear, inspectable first step before GBP is
-computed. Instants with no rate are flagged for quarantine rather than silently left null.
+**What to build:** Clean, typed transaction/fee **facts** (`core.deposit`, `core.withdrawal`,
+`core.fee`) that carry only their own columns — no FX, no GBP. The FX rate points land as their own
+dimension (`core.exchange_rate`), and the as-of match is resolved into **separate per-stream match
+tables** (`core.deposit_fx`, `core.withdrawal_fx`, `core.fee_fx`) keyed to the fact — so the fact
+table is just the fact, and the chosen rate is still inspectable before any arithmetic.
 
 **Blocked by:** FX as-of conversion unit (pure, tested); Bronze `live` — consolidate deposits/withdrawals + land counterparty & fees.
 
-- [ ] Each deposit/withdrawal row has the rate effective at its settlement instant attached
-- [ ] Each fee row has the rate for its currency and date attached
+- [ ] `core.deposit` / `core.withdrawal` / `core.fee` are clean typed facts with **no** `fx_*` columns
+- [ ] `core.exchange_rate` holds the rate points (one row per interval: `rate_id, valid_from/till (+ *_ms), rate`)
+- [ ] `core.deposit_fx` / `core.withdrawal_fx` / `core.fee_fx` hold one row per fact: `key, fx_instant_ms, fx_rate_id, fx_rate, fx_quarantine_reason`
 - [ ] The settlement instant used for the as-of match is chosen and documented
-- [ ] Rows whose instant has no rate are flagged with a quarantine reason (not dropped here)
-- [ ] Conservation: attaching rates neither adds nor drops rows (row count in = row count out)
+- [ ] Rows with no rate are flagged in the match table with a quarantine reason (not dropped here)
+- [ ] Lineage: `*_fx.fx_rate_id` joins `core.exchange_rate.rate_id` back to the exact point used
+- [ ] Conservation: each match table has exactly one row per fact (no fan-out, no loss)
 
 ## Silver `shape` — heterogeneous attribute cleanup
 
@@ -128,13 +153,15 @@ sometimes a scalar and sometimes an object into consistent, queryable columns.
 
 ## Silver `shape` — FX applied → GBP normalisation
 
-**What to build:** GBP-normalised amounts computed by applying the attached rate to each transaction
-and fee, with any row whose FX could not be resolved quarantined with a reason so no wrong number
-reaches Gold.
+**What to build:** GBP-normalised facts (`shape.deposit` / `withdrawal` / `fee`) produced by joining
+each `core` fact to its `core.*_fx` match table and computing `gbp_amount = native_amount × fx_rate`.
+Any row whose FX could not be resolved (a quarantine reason in the match table) is routed to
+quarantine, so no wrong number reaches Gold.
 
-**Blocked by:** Silver `core` — FX rate attached to transactions & fees.
+**Blocked by:** Silver `core` — clean facts, `exchange_rate` dim, and FX as-of match (facts stay pure).
 
-- [ ] Every promoted transaction/fee carries a GBP amount (native amount × attached rate)
+- [ ] Each fact is joined to its `*_fx` match table; `gbp_amount = native_amount × fx_rate`
+- [ ] Rows with a match-table quarantine reason are routed to quarantine, not priced
 - [ ] Out-of-coverage / gap / unpriced rows are quarantined with a stated reason
 - [ ] Conservation: promoted rows + quarantined rows = input rows
 
