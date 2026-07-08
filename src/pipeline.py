@@ -26,6 +26,7 @@ def main() -> None:
     try:
         build_foundation(con)
         silver_core.build_companies(con)
+        silver_core.build_groups(con)
     finally:
         con.close()
     logger.info("pipeline done")

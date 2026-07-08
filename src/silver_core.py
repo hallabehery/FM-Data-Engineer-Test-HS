@@ -70,3 +70,53 @@ def build_companies(con: duckdb.DuckDBPyConnection) -> StageReport:
     return report_stage(
         "silver.core.companies", rows_in=rows_in, rows_out=rows_out, kept=rows_out
     )
+
+
+def build_groups(con: duckdb.DuckDBPyConnection) -> StageReport:
+    """Unpick `groups.json` into `core.groups` (one row per `groupId`).
+
+    Groups live under `result.groups`. Exposes the profile / segmentation /
+    lifecycle fields as columns. The heterogeneous `attributes` array (whose
+    `value` is sometimes a scalar and sometimes an object) is carried forward as
+    JSON — DuckDB types it as `JSON`, so ingestion does not break on the shape
+    difference; the Silver `shape` step resolves it. Idempotent.
+    """
+    src = config.GROUPS_JSON
+
+    # Validate the expected top-level shape before proceeding (fail loud, not silent).
+    columns = {
+        row[0]
+        for row in con.execute(
+            f"DESCRIBE SELECT * FROM read_json_auto('{src}')"
+        ).fetchall()
+    }
+    missing = {"result", "export"} - columns
+    if missing:
+        raise ValueError(f"groups.json missing expected top-level keys: {missing}")
+
+    con.execute(
+        f"""
+        CREATE OR REPLACE TABLE core.groups AS
+        SELECT
+            g.groupId                            AS group_id,
+            g.profile.displayName                AS display_name,
+            g.profile.description                AS description,
+            g.profile.lifecycle.status.code      AS status_code,
+            g.profile.lifecycle.status.active    AS active,
+            g.profile.lifecycle.createdOn        AS created_on,
+            g.segmentation.pod                   AS pod,
+            g.segmentation.vertical              AS vertical,
+            g.segmentation.industry              AS industry,
+            g.segmentation.commercialTier        AS commercial_tier,
+            to_json(g.attributes)                AS attributes_json
+        FROM (SELECT unnest(result.groups) AS g FROM read_json_auto('{src}'))
+        """
+    )
+
+    rows_in = con.execute(
+        f"SELECT len(result.groups) FROM read_json_auto('{src}')"
+    ).fetchone()[0]
+    rows_out = con.execute("SELECT COUNT(*) FROM core.groups").fetchone()[0]
+    return report_stage(
+        "silver.core.groups", rows_in=rows_in, rows_out=rows_out, kept=rows_out
+    )
