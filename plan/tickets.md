@@ -142,17 +142,17 @@ table is just the fact, and the chosen rate is still inspectable before any arit
 - [x] Lineage: `*_fx.fx_rate_id` joins `core.exchange_rate.rate_id` back to the exact point used
 - [x] Conservation: each match table has exactly one row per fact (no fan-out, no loss)
 
-## Silver `shape` — heterogeneous attribute cleanup
+## ~~Silver `shape` — heterogeneous attribute cleanup~~ ✅ DONE (`feature/silver-shape-attributes`, #7)
 
 **What to build:** The remaining JSON cleanup, resolving the group/company `attributes` whose value is
 sometimes a scalar and sometimes an object into consistent, queryable columns.
 
 **Blocked by:** Silver `core` — companies JSON unpick; Silver `core` — groups JSON unpick (first pass).
 
-- [ ] Scalar-valued attributes and object-valued attributes both resolve without error
-- [ ] Attribute names that appear in more than one shape are handled by branching on type
-- [ ] Cleaned entity attributes are queryable as columns
-- [ ] Conservation: entity row counts are unchanged by the cleanup
+- [x] Scalar-valued attributes and object-valued attributes both resolve without error
+- [x] Attribute names that appear in more than one shape are handled by branching on type
+- [x] Cleaned entity attributes are queryable as columns
+- [x] Conservation: entity row counts are unchanged by the cleanup
 
 ## Silver `shape` — FX applied → GBP normalisation
 

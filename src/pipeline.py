@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import duckdb
 
-from . import bronze, config, fx, silver_core, warehouse
+from . import bronze, config, fx, silver_core, silver_shape, warehouse
 from .reporting import logger
 
 
@@ -32,6 +32,7 @@ def main() -> None:
         fx_rates = fx.FxRates.load()  # load the ~18 MB rate file once, share it
         silver_core.build_exchange_rates(con, fx_rates)
         silver_core.build_fx_match(con, fx_rates)
+        silver_shape.build_entity_shape(con)
     finally:
         con.close()
     logger.info("pipeline done")
