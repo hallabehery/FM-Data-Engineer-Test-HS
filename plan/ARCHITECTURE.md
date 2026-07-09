@@ -50,13 +50,13 @@ as-of match is a *separate* table, never inline `fx_*` columns on the fact.
 | **bronze.raw** | `deposit_2025_07 … _12`, `withdrawal_2025_07 … _12` | raw per-month landings, values as-is |
 | **bronze.live** | `deposit`, `withdrawal`, `counterparty`, `fee` | consolidated / landed, still raw values |
 | **silver.core** | facts (pure): `deposit`, `withdrawal`, `fee` | typed & cleaned — no FX, no GBP |
-| | dims: `company`, `group`, `counterparty`, `exchange_rate` | unpicked / cleaned reference data |
+| | dims: `company`, `corporate_group`, `counterparty`, `exchange_rate` | unpicked / cleaned reference data |
 | | FX match: `deposit_fx`, `withdrawal_fx`, `fee_fx` | as-of result per fact: `key, fx_instant_ms, fx_rate_id, fx_rate, fx_quarantine_reason` |
 | **silver.shape** | `deposit`, `withdrawal`, `fee` (GBP-normalised) | fact ⨝ its `*_fx` → `gbp_amount`; unresolved quarantined; entity attributes resolved |
 | **gold.data_mart** | `entity` (+`source`), `edge_fact` (+`source`) | counterpart→group resolution; `focal_group × counterpart × direction × month` measures |
 | **gold.curated** | `node`, `edge` | final network product (circles/diamonds + directed edges); reads only from `data_mart` |
 
-> `group` is a SQL reserved word — likely renamed `corporate_group` when #20 lands (avoids pervasive quoting).
+> `group` is a SQL reserved word, so the group dimension is named `corporate_group` (avoids pervasive quoting).
 
 ## 5. Data flow
 
@@ -119,7 +119,9 @@ Excel Fees ───────────────────────
 
 - **Tables:** singular, `snake_case` (`deposit`, not `Deposits`).
 - **Columns:** `lower_snake_case`, no spaces/slashes/parentheses (`tx_value_ccy`, not `"Tx Value (CCY)"`).
-- One canonical rename map, applied consistently; raw **values/types** preserved, only names conformed.
+- One canonical rename map (`src/naming.py`), applied at Bronze landing; raw **values/types**
+  preserved, only names conformed. (This deviates from `build_protocol.md`'s literal plural table
+  names — an intentional, documented cleanup.)
 
 ## 9. Engineering standards (summary)
 
@@ -136,7 +138,7 @@ docs/build_protocol.md      authoritative layer/schema layout
 plan/SPEC.md                requirements/spec
 plan/tickets.md             work breakdown + status
 plan/ARCHITECTURE.md        this document (design/topology)
-src/                        pipeline modules (config, warehouse, bronze, silver_core, fx, reporting, pipeline)
+src/                        pipeline modules (config, naming, warehouse, bronze, silver_core, fx, reporting, pipeline)
 tests/                      per-layer + FX unit tests
 notebook/pipeline.ipynb     thin orchestrator that calls src/
 submission/warehouse.duckdb built output (git-ignored)

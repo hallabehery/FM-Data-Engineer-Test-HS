@@ -54,8 +54,8 @@ decision is documented in `submission/WRITEUP.md` so the pipeline can be trusted
 11. As a data engineer, I want the transactional data landed per-month in Bronze `raw`,
     so that I can fix a problem in one small month-table and have it flow through to the
     consolidated tables.
-12. As a data engineer, I want all months consolidated into single `deposits` and
-    `withdrawals` tables in Bronze `live`, so that downstream layers read one place.
+12. As a data engineer, I want all months consolidated into single `deposit` and
+    `withdrawal` tables in Bronze `live`, so that downstream layers read one place.
 13. As a data engineer, I want the groups and companies JSON unpicked in Silver, so that
     nested registration, relationship, and attribute fields become queryable columns.
 14. As a data engineer, I want heterogeneous `attributes` (scalar-or-object values)
@@ -92,8 +92,10 @@ See `plan/ARCHITECTURE.md` for the concrete table topology and data-flow diagram
 - Six schemas created up front: Bronze = `raw` + `live`; Silver = `core` + `shape`;
   Gold = `data_mart` + `curated`.
 - Bronze `raw`: transactional sheets split into one table **per month** (Jul–Dec).
-- Bronze `live`: consolidate to single `deposits` and `withdrawals` tables. Deposit and
+- Bronze `live`: consolidate to single `deposit` and `withdrawal` tables. Deposit and
   Withdrawals sheets differ in column order — align on **column name**, never position.
+  (Table/column names are conformed to singular `snake_case` at landing — see
+  `plan/ARCHITECTURE.md` § naming — an intentional deviation from the protocol's plural names.)
 - Silver `core`: first-pass JSON unpicking of groups + companies; clean typed **facts**
   (`deposit`/`withdrawal`/`fee`) kept **pure**; the FX rate points landed as an
   `exchange_rate` dimension; the as-of match *attached* per fact in **separate** `<stream>_fx`

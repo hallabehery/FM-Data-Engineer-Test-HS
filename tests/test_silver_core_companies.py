@@ -25,7 +25,7 @@ def test_row_count_matches_source(con):
     source_total = con.execute(
         f"SELECT metadata.total FROM read_json_auto('{config.COMPANIES_JSON}')"
     ).fetchone()[0]
-    table_rows = con.execute("SELECT COUNT(*) FROM core.companies").fetchone()[0]
+    table_rows = con.execute("SELECT COUNT(*) FROM core.company").fetchone()[0]
     assert table_rows == source_total
     # Conservation: unpicking neither adds nor drops rows.
     assert report.rows_in == report.rows_out == table_rows
@@ -38,7 +38,7 @@ def test_row_count_matches_source(con):
 def test_dc_id_is_a_clean_natural_key(con):
     build_companies(con)
     stats = con.execute(
-        "SELECT COUNT(*), COUNT(dc_id), COUNT(DISTINCT dc_id) FROM core.companies"
+        "SELECT COUNT(*), COUNT(dc_id), COUNT(DISTINCT dc_id) FROM core.company"
     ).fetchone()
     total, non_null, distinct = stats
     assert non_null == total, "dc_id must be non-null for every row"
@@ -51,7 +51,7 @@ def test_dc_id_is_a_clean_natural_key(con):
 def test_nested_fields_and_bridge_key_present(con):
     build_companies(con)
     cols = {
-        row[0] for row in con.execute("DESCRIBE core.companies").fetchall()
+        row[0] for row in con.execute("DESCRIBE core.company").fetchall()
     }
     expected = {
         "legal_name",
@@ -68,6 +68,6 @@ def test_nested_fields_and_bridge_key_present(con):
     assert expected <= cols, f"missing columns: {expected - cols}"
     # The bridge key resolves for most companies (some may be unaffiliated).
     linked = con.execute(
-        "SELECT COUNT(parent_group_id) FROM core.companies"
+        "SELECT COUNT(parent_group_id) FROM core.company"
     ).fetchone()[0]
     assert linked > 0

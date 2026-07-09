@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from src import bronze, config, warehouse
+from src import bronze, config, naming, warehouse
 
 SKIP = pytest.mark.skipif(
     not Path(config.TRANSACTIONS_XLSX).exists(), reason="workbook not present"
@@ -24,7 +24,7 @@ def con(tmp_path):
 @SKIP
 def test_live_consolidates_all_months_conserved(con):
     reports = {r.stage: r for r in bronze.build_live(con)}
-    for stream in ("deposits", "withdrawals"):
+    for stream in ("deposit", "withdrawal"):
         raw_total = sum(
             con.execute(
                 f"SELECT COUNT(*) FROM raw.{stream}_{ym.replace('-', '_')}"
@@ -40,8 +40,8 @@ def test_live_consolidates_all_months_conserved(con):
 def test_columns_aligned_by_name(con):
     bronze.build_live(con)
     # Consolidated table carries exactly the month table's columns (BY NAME union).
-    live_cols = {r[0] for r in con.execute("DESCRIBE live.deposits").fetchall()}
-    month_cols = {r[0] for r in con.execute("DESCRIBE raw.deposits_2025_07").fetchall()}
+    live_cols = {r[0] for r in con.execute("DESCRIBE live.deposit").fetchall()}
+    month_cols = {r[0] for r in con.execute("DESCRIBE raw.deposit_2025_07").fetchall()}
     assert live_cols == month_cols
 
 
@@ -49,11 +49,12 @@ def test_columns_aligned_by_name(con):
 def test_counterparty_and_fees_landed(con):
     bronze.build_live(con)
     cp = con.execute("SELECT COUNT(*) FROM live.counterparty").fetchone()[0]
-    fees = con.execute("SELECT COUNT(*) FROM live.fees").fetchone()[0]
+    fees = con.execute("SELECT COUNT(*) FROM live.fee").fetchone()[0]
     assert cp == 1585
     assert fees == 21921
+    # Columns are landed in snake_case (per the naming cleanup).
     cp_cols = {r[0] for r in con.execute("DESCRIBE live.counterparty").fetchall()}
-    assert bronze.EXPECTED_COUNTERPARTY_COLUMNS <= cp_cols
+    assert set(naming.COUNTERPARTY_COLUMNS.values()) <= cp_cols
 
 
 @SKIP
