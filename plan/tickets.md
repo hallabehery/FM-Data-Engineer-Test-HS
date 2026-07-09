@@ -154,19 +154,19 @@ sometimes a scalar and sometimes an object into consistent, queryable columns.
 - [x] Cleaned entity attributes are queryable as columns
 - [x] Conservation: entity row counts are unchanged by the cleanup
 
-## Silver `shape` — FX applied → GBP normalisation
+## ~~Silver `shape` — FX applied → GBP normalisation~~ ✅ DONE (`feature/silver-shape-gbp`, #9)
 
 **What to build:** GBP-normalised facts (`shape.deposit` / `withdrawal` / `fee`) produced by joining
-each `core` fact to its `core.*_fx` match table and computing `gbp_amount = native_amount × fx_rate`.
+each `live` fact to its `core.*_fx` match table and computing `gbp_amount = native_amount × fx_rate`.
 Any row whose FX could not be resolved (a quarantine reason in the match table) is routed to
-quarantine, so no wrong number reaches Gold.
+`shape.<stream>_quarantine`, so no wrong number reaches Gold.
 
 **Blocked by:** Silver `core` — clean facts, `exchange_rate` dim, and FX as-of match (facts stay pure).
 
-- [ ] Each fact is joined to its `*_fx` match table; `gbp_amount = native_amount × fx_rate`
-- [ ] Rows with a match-table quarantine reason are routed to quarantine, not priced
-- [ ] Out-of-coverage / gap / unpriced rows are quarantined with a stated reason
-- [ ] Conservation: promoted rows + quarantined rows = input rows
+- [x] Each fact is joined to its `*_fx` match table; `gbp_amount = native_amount × fx_rate`
+- [x] Rows with a match-table quarantine reason are routed to quarantine, not priced
+- [x] Out-of-coverage / gap / unpriced rows are quarantined with a stated reason
+- [x] Conservation: promoted rows + quarantined rows = input rows
 
 ## Gold `data_mart` — combined entity tables with provenance
 
