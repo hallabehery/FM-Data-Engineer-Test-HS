@@ -1,10 +1,11 @@
-"""Silver `core` — first-pass JSON unpicking, clean facts, and the FX as-of match.
+"""Silver `core` — first-pass JSON unpicking, dimensions, and the FX as-of match.
 
 The `core` schema does the heavy lifting: it flattens the nested JSON sources into
-queryable columns (`core.company`, `core.corporate_group`), lands the clean transaction/fee
-**facts** (`core.deposit`/`withdrawal`/`fee`, kept pure — no FX, no GBP), persists the
-FX rate points as a dimension (`core.exchange_rate`), and resolves the FX as-of match
-into separate per-stream tables (`core.deposit_fx`/`withdrawal_fx`/`fee_fx`).
+queryable columns (`core.company`, `core.corporate_group`), persists the FX rate points
+as a dimension (`core.exchange_rate`), and resolves the FX as-of match into separate
+per-stream tables (`core.deposit_fx`/`withdrawal_fx`/`fee_fx`). The transaction/fee
+**facts are not copied here** — they live once in Bronze `live`; the match tables key
+back to them, and Silver `shape` joins `live.<fact>` to `core.<fact>_fx`.
 
 Heterogeneous / awkward fields (e.g. the scalar-or-object `attributes` array) are
 carried forward as JSON for the Silver `shape` cleanup step, not resolved here.
@@ -130,27 +131,9 @@ def build_groups(con: duckdb.DuckDBPyConnection) -> StageReport:
     )
 
 
-# --- Clean facts (pure) ------------------------------------------------------
-# core facts are the conformed transaction/fee tables the rest of Silver/Gold read.
-# They carry only their own columns — no FX, no GBP. `live.fee` is typed (Bronze
-# lands Fees with inference), so these are typed pass-throughs of the `live` tables.
-_FACTS = {"deposit": "live.deposit", "withdrawal": "live.withdrawal", "fee": "live.fee"}
-
-
-def build_facts(con: duckdb.DuckDBPyConnection) -> list[StageReport]:
-    """Land the clean, pure transaction/fee facts in `core`. Idempotent."""
-    reports = []
-    for name, source in _FACTS.items():
-        con.execute(f"CREATE OR REPLACE TABLE core.{name} AS SELECT * FROM {source}")
-        n_in = con.execute(f"SELECT COUNT(*) FROM {source}").fetchone()[0]
-        n_out = con.execute(f"SELECT COUNT(*) FROM core.{name}").fetchone()[0]
-        if n_in != n_out:
-            raise ValueError(f"core.{name}: {n_in} source rows but {n_out} landed")
-        reports.append(
-            report_stage(f"silver.core.{name}", rows_in=n_in, rows_out=n_out, kept=n_out)
-        )
-    return reports
-
+# The transaction/fee facts are NOT copied into `core` — they live once in Bronze
+# `live` (`live.deposit` / `live.withdrawal` / `live.fee`). `core` holds only the
+# dimensions and the FX as-of match, which keys back to the `live` facts.
 
 # --- exchange_rate dimension -------------------------------------------------
 def build_exchange_rates(
@@ -205,12 +188,13 @@ def _match_fx(
 ) -> StageReport:
     """Resolve the as-of FX match for `fact` into `match_table` (one row per fact).
 
-    Keeps the fact pure: the match lives in its own table, keyed to the fact by
-    `key_col`. Uses the tested FX unit as the single source of truth. Rows with no
-    rate carry a `fx_quarantine_reason` (kept, not dropped — Silver `shape` handles).
+    Reads the fact from Bronze `live` (the facts are not copied into `core`) and keeps
+    it untouched: the match lives in its own table, keyed by `key_col`. Uses the tested
+    FX unit as the single source of truth. Rows with no rate carry a
+    `fx_quarantine_reason` (kept, not dropped — Silver `shape` handles them).
     """
     lookup = con.sql(
-        f'SELECT {key_col} AS _k, {ccy_col} AS _ccy, {instant_sql} AS _instant FROM core.{fact}'
+        f'SELECT {key_col} AS _k, {ccy_col} AS _ccy, {instant_sql} AS _instant FROM live.{fact}'
     ).df()
 
     fx_rate: list[float | None] = []
@@ -244,7 +228,7 @@ def _match_fx(
     finally:
         con.unregister("_fx_out")
 
-    n_fact = con.execute(f"SELECT COUNT(*) FROM core.{fact}").fetchone()[0]
+    n_fact = con.execute(f"SELECT COUNT(*) FROM live.{fact}").fetchone()[0]
     n_match = con.execute(f"SELECT COUNT(*) FROM {match_table}").fetchone()[0]
     if n_match != n_fact:
         raise ValueError(f"{match_table}: {n_match} match rows for {n_fact} facts (expected 1:1)")

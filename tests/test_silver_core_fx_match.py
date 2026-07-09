@@ -1,4 +1,4 @@
-"""Silver core FX: pure facts, exchange_rate dimension, and per-stream as-of match tables."""
+"""Silver core FX: exchange_rate dimension + per-stream as-of match tables (facts stay in live)."""
 from __future__ import annotations
 
 from pathlib import Path
@@ -22,25 +22,28 @@ def con(tmp_path):
     warehouse.create_schemas(c)
     bronze.build_raw_monthly(c)
     bronze.build_live(c)
-    silver_core.build_facts(c)
     yield c
     c.close()
 
 
 @SKIP
-def test_facts_are_pure_and_conserved(con):
-    for name, source in silver_core._FACTS.items():
-        n_fact = con.execute(f"SELECT COUNT(*) FROM core.{name}").fetchone()[0]
-        n_src = con.execute(f"SELECT COUNT(*) FROM {source}").fetchone()[0]
-        assert n_fact == n_src
-        cols = {r[0] for r in con.execute(f"DESCRIBE core.{name}").fetchall()}
-        assert not (cols & FX_COLS), f"core.{name} must not carry FX columns"
+def test_facts_stay_in_live_and_are_pure(con):
+    # The facts live once in `live`, not copied into `core`, and carry no FX columns.
+    core_tables = {
+        r[0] for r in con.execute(
+            "SELECT table_name FROM duckdb_tables() WHERE schema_name = 'core'"
+        ).fetchall()
+    }
+    assert core_tables.isdisjoint({"deposit", "withdrawal", "fee"})
+    for name in ("deposit", "withdrawal", "fee"):
+        cols = {r[0] for r in con.execute(f"DESCRIBE live.{name}").fetchall()}
+        assert not (cols & FX_COLS), f"live.{name} must not carry FX columns"
 
 
 @SKIP
 def test_fee_date_is_typed_not_excel_serial(con):
     # Bronze fees-typing fix: fee Date lands as a TIMESTAMP, not a serial string.
-    dtype = con.execute("DESCRIBE core.fee").df().set_index("column_name").loc["fee_date", "column_type"]
+    dtype = con.execute("DESCRIBE live.fee").df().set_index("column_name").loc["fee_date", "column_type"]
     assert "TIMESTAMP" in dtype.upper()
 
 
@@ -61,8 +64,8 @@ def test_match_tables_one_to_one_and_lineage(con):
     for name in ("deposit", "withdrawal", "fee"):
         match = f"core.{name}_fx"
         key = FACT_KEYS[name]
-        # Exactly one match row per fact.
-        n_fact = con.execute(f"SELECT COUNT(*) FROM core.{name}").fetchone()[0]
+        # Exactly one match row per fact (the fact lives in `live`).
+        n_fact = con.execute(f"SELECT COUNT(*) FROM live.{name}").fetchone()[0]
         n_match = con.execute(f"SELECT COUNT(*) FROM {match}").fetchone()[0]
         assert n_match == n_fact
         # Match carries the fact key + FX columns; every row has rate xor reason.
@@ -96,7 +99,7 @@ def test_gbp_match_has_identity_rate_and_no_rate_id(con):
     silver_core.build_fx_match(con)
     bad = con.execute(
         """
-        SELECT COUNT(*) FROM core.deposit d
+        SELECT COUNT(*) FROM live.deposit d
         JOIN core.deposit_fx m ON d.transaction_id = m.transaction_id
         WHERE d.tx_currency = 'GBP' AND (m.fx_rate <> 1.0 OR m.fx_rate_id IS NOT NULL)
         """
@@ -106,9 +109,10 @@ def test_gbp_match_has_identity_rate_and_no_rate_id(con):
 
 @SKIP
 def test_flagging_mechanism(con):
+    # _match_fx reads the fact from `live`, so seed a synthetic live.synth.
     con.execute(
         """
-        CREATE OR REPLACE TABLE core.synth AS
+        CREATE OR REPLACE TABLE live.synth AS
         SELECT * FROM (VALUES
             ('T1', 'EUR', TIMESTAMP '2025-09-15 12:00:00'),
             ('T2', 'XYZ', TIMESTAMP '2025-09-15 12:00:00'),
