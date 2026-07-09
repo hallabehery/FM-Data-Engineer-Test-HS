@@ -41,17 +41,17 @@ All six schemas are created up front.
 
 ## 4. Tables per schema
 
-Names shown in the clean **singular / `snake_case`** target form (see the naming-cleanup issue #20).
-**Facts stay facts** — a transaction/fee table holds only its own columns; FX is a *dimension* and the
-as-of match is a *separate* table, never inline `fx_*` columns on the fact.
+Names shown in the clean **singular / `snake_case`** form. **Facts stay facts** — the
+transaction/fee facts live once in Bronze `live` (not copied into `core`); FX is a *dimension*
+and the as-of match is a *separate* `core` table keyed to the `live` fact, never inline `fx_*`
+columns on the fact.
 
 | Layer.schema | Tables | Role |
 |---|---|---|
 | **bronze.raw** | `deposit_2025_07 … _12`, `withdrawal_2025_07 … _12` | raw per-month landings, values as-is |
-| **bronze.live** | `deposit`, `withdrawal`, `counterparty`, `fee` | consolidated / landed, still raw values |
-| **silver.core** | facts (pure): `deposit`, `withdrawal`, `fee` | typed & cleaned — no FX, no GBP |
-| | dims: `company`, `corporate_group`, `counterparty`, `exchange_rate` | unpicked / cleaned reference data |
-| | FX match: `deposit_fx`, `withdrawal_fx`, `fee_fx` | as-of result per fact: `key, fx_instant_ms, fx_rate_id, fx_rate, fx_quarantine_reason` |
+| **bronze.live** | `deposit`, `withdrawal`, `counterparty`, `fee` | consolidated / landed; **the facts live here (one place)** |
+| **silver.core** | dims: `company`, `corporate_group`, `counterparty`, `exchange_rate` | unpicked / cleaned reference data |
+| | FX match: `deposit_fx`, `withdrawal_fx`, `fee_fx` | as-of result per `live` fact: `key, fx_instant_ms, fx_rate_id, fx_rate, fx_quarantine_reason` |
 | **silver.shape** | `deposit`, `withdrawal`, `fee` (GBP-normalised) | fact ⨝ its `*_fx` → `gbp_amount`; unresolved quarantined; entity attributes resolved |
 | **gold.data_mart** | `entity` (+`source`), `edge_fact` (+`source`) | counterpart→group resolution; `focal_group × counterpart × direction × month` measures |
 | **gold.curated** | `node`, `edge` | final network product (circles/diamonds + directed edges); reads only from `data_mart` |
@@ -62,18 +62,18 @@ as-of match is a *separate* table, never inline `fx_*` columns on the fact.
 
 ```
 companies.json ──┐ unpick ─────────────────► core.company
-groups.json ─────┤ unpick ─────────────────► core.group
+groups.json ─────┤ unpick ─────────────────► core.corporate_group
 exchange_rates ──┘ points ─────────────────► core.exchange_rate
-                                                     │  as-of match (FX unit)
-Excel Deposit/Withdrawal ─► raw.deposit_MM ─► live.deposit ─────► core.deposit ─────┐  (pure fact)
-                            (per month)      (consolidated)                         │
-Excel Counterparty ───────────────────────► live.counterparty ─► core.counterparty │
-Excel Fees ───────────────────────────────► live.fee ──────────► core.fee          │  (pure fact)
-                                                     │                              │
-                          core.deposit_fx (rate_id, rate, instant, reason) ◄────────┘
+                                                     │  as-of match (FX unit, reads live facts)
+Excel Deposit/Withdrawal ─► raw.deposit_MM ─► live.deposit ───────────┐  (fact — lives here only)
+                            (per month)      (consolidated)           │
+Excel Counterparty ───────────────────────► live.counterparty        │
+Excel Fees ───────────────────────────────► live.fee ────────────────┤  (fact — lives here only)
+                                                     │                │
+                          core.deposit_fx (key, rate_id, rate, instant, reason) ◄─┘
                                                      │
                                                      ▼
-                    shape.deposit  =  core.deposit ⨝ core.deposit_fx
+                    shape.deposit  =  live.deposit ⨝ core.deposit_fx
                                       gbp_amount = tx_value_ccy × fx_rate   (+ quarantine unpriceable)
                     shape.withdrawal / shape.fee   (same pattern)
                                                      │
@@ -92,14 +92,14 @@ Excel Fees ───────────────────────
   `GBP` as the identity (`1.0`), strips the JSON-quoted `rateStr`, and reads the ~18 MB file with a
   raised `maximum_object_size`.
 - **Dimension, not inline columns.** The rate points are persisted as `core.exchange_rate`
-  (`rate_id, valid_from/till (+ *_ms), rate`), and the match per fact lives in `core.<stream>_fx`.
-  Facts stay pure; GBP is computed in `shape`.
+  (`rate_id, valid_from/till (+ *_ms), rate`), and the match per fact lives in `core.<stream>_fx`
+  (keyed to the `live` fact). Facts are never touched; GBP is computed in `shape`.
 - **Why a separate match table** (rather than resolving FX only in `shape`): it mirrors the
   build-protocol's two steps — `core` *attaches* the rate (selection: the as-of match →
   `core.<stream>_fx`), `shape` *applies* it (`× rate` → GBP). This separates the two failure modes
-  (wrong rate *selected* vs wrong *arithmetic*) into two inspectable stages, and keeps `core.deposit`
-  a pure fact. The alternative — fold match + apply into `shape` — is fewer tables but collapses those
-  two steps and deviates from the protocol's `core`-attaches-FX step.
+  (wrong rate *selected* vs wrong *arithmetic*) into two inspectable stages, and keeps the `live`
+  fact untouched. The alternative — fold match + apply into `shape` — is fewer tables but collapses
+  those two steps and deviates from the protocol's `core`-attaches-FX step.
 - **Lineage.** `core.<stream>_fx.fx_rate_id` → `core.exchange_rate.rate_id` traces each transaction to
   the exact rate point (and its validity window) that priced it.
 - **Quarantine reasons** (never silently mis-price): `fx_out_of_coverage`, `fx_unknown_currency`,

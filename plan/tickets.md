@@ -24,15 +24,14 @@ fact. (This supersedes the earlier approach that put `fx_rate`/`fx_rate_id` on `
 | Layer.schema | Tables | Role |
 |---|---|---|
 | **bronze.raw** | `deposit_2025_07 … _12`, `withdrawal_2025_07 … _12` | raw per-month landings, values as-is |
-| **bronze.live** | `deposit`, `withdrawal`, `counterparty`, `fee` | consolidated / landed, still raw values |
-| **silver.core** | facts (pure): `deposit`, `withdrawal`, `fee` | typed & cleaned — no FX, no GBP |
-| | dims: `company`, `group`, `counterparty`, `exchange_rate` | unpicked / cleaned reference data |
-| | FX match (bridge): `deposit_fx`, `withdrawal_fx`, `fee_fx` | as-of result: `key, fx_instant_ms, fx_rate_id, fx_rate, fx_quarantine_reason` |
+| **bronze.live** | `deposit`, `withdrawal`, `counterparty`, `fee` | consolidated / landed; **the facts live here (one place)** |
+| **silver.core** | dims: `company`, `corporate_group`, `counterparty`, `exchange_rate` | unpicked / cleaned reference data |
+| | FX match (bridge): `deposit_fx`, `withdrawal_fx`, `fee_fx` | as-of result per `live` fact: `key, fx_instant_ms, fx_rate_id, fx_rate, fx_quarantine_reason` |
 | **silver.shape** | `deposit`, `withdrawal`, `fee` (GBP-normalised) | fact ⨝ its `*_fx` → `gbp_amount`; unresolved quarantined; entity attributes resolved |
 | **gold.data_mart** | `entity` (+`source`), `edge_fact` (+`source`) | counterpart→group resolution; `focal_group × counterpart × direction × month` measures |
 | **gold.curated** | `node`, `edge` | final network product (circles/diamonds + directed edges); reads only from `data_mart` |
 
-Flow: `raw` → `live` → `core` (facts + dims + FX match) → `shape` (apply FX → GBP) → `data_mart`
+Flow: `raw` → `live` (facts) → `core` (dims + FX match) → `shape` (apply FX → GBP) → `data_mart`
 (model/aggregate) → `curated` (nodes + edges).
 
 ---
@@ -122,6 +121,10 @@ cleanup step can normalise.
 - [x] Row count matches the source record count
 
 ## ~~Silver `core` — clean facts, `exchange_rate` dim, and FX as-of match (facts stay pure)~~ ✅ DONE (`feature/silver-core-fx-match`, #8)
+
+> **Superseded in part by #24:** the `core.deposit`/`withdrawal`/`fee` fact copies below were
+> later removed as redundant with Bronze `live`. `core` now holds only dims + the `*_fx` match,
+> which keys back to the `live` facts. The rest of this ticket stands.
 
 **What to build:** Clean, typed transaction/fee **facts** (`core.deposit`, `core.withdrawal`,
 `core.fee`) that carry only their own columns — no FX, no GBP. The FX rate points land as their own
