@@ -25,7 +25,7 @@ COV_FROM, COV_TILL = 0, 1_000
 
 def _point(valid_from: int, valid_till: int, rate: str):
     # rateStr is JSON-quoted in the source file; keep quotes to exercise stripping.
-    return ["r", valid_from, valid_till, f'"{rate}"', 0]
+    return [0, valid_from, valid_till, f'"{rate}"', 0]
 
 
 def _rates(points_by_ccy: dict[str, list], cov_from=COV_FROM, cov_till=COV_TILL) -> FxRates:
@@ -47,6 +47,14 @@ def test_exact_boundary_from_inclusive_till_exclusive():
 def test_mid_interval():
     fx = _rates({"EUR": [_point(100, 200, "1.5")]})
     assert fx.rate_at("EUR", 150).rate == 1.5
+
+
+def test_matched_result_carries_rate_id():
+    fx = _rates({"EUR": [[42, 100, 200, '"1.5"', 0]]})
+    assert fx.rate_at("EUR", 150).rate_id == 42
+    # GBP and quarantined lookups have no rate point.
+    assert fx.rate_at("GBP", 150).rate_id is None
+    assert fx.rate_at("EUR", 9_999).rate_id is None
 
 
 def test_gbp_is_always_one():
