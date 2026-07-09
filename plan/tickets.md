@@ -168,7 +168,7 @@ Any row whose FX could not be resolved (a quarantine reason in the match table) 
 - [x] Out-of-coverage / gap / unpriced rows are quarantined with a stated reason
 - [x] Conservation: promoted rows + quarantined rows = input rows
 
-## Gold `data_mart` — combined entity tables with provenance
+## ~~Gold `data_mart` — combined entity tables with provenance~~ ✅ DONE (`feature/gold-data-mart-entity`, #10)
 
 **What to build:** The group and company reference data combined into the entity tables the network
 needs, each row carrying a `source` column that lists every source it was composed from, so lineage
@@ -176,10 +176,10 @@ is obvious on the row.
 
 **Blocked by:** Silver `shape` — heterogeneous attribute cleanup.
 
-- [ ] Group and company entities are combined into the modelled entity table(s)
-- [ ] Counterparties resolve to a group where a deterministic key exists (`Group ID`/`DC Id`), else stand alone
-- [ ] Every row carries a `source` column listing all contributing sources
-- [ ] Conservation: entity counts reconcile to distinct source groups/companies (the join adds no fan-out)
+- [x] Group and company entities are combined into the modelled entity table(s)
+- [x] Counterparties resolve to a group where a deterministic key exists (`Group ID`/`DC Id`), else stand alone
+- [x] Every row carries a `source` column listing all contributing sources
+- [x] Conservation: entity counts reconcile to distinct source groups/companies (the join adds no fan-out)
 
 ## Gold `data_mart` — directed edge fact with measures
 

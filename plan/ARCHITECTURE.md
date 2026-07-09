@@ -49,11 +49,11 @@ columns on the fact.
 | Layer.schema | Tables | Role |
 |---|---|---|
 | **bronze.raw** | `deposit_2025_07 … _12`, `withdrawal_2025_07 … _12` | raw per-month landings, values as-is |
-| **bronze.live** | `deposit`, `withdrawal`, `counterparty`, `fee` | consolidated / landed; **the facts live here (one place)** |
-| **silver.core** | dims: `company`, `corporate_group`, `counterparty`, `exchange_rate` | unpicked / cleaned reference data |
+| **bronze.live** | `deposit`, `withdrawal`, `counterparty`, `fee` | consolidated / landed; the facts + the counterparty dimension live here |
+| **silver.core** | dims: `company`, `corporate_group`, `exchange_rate` | unpicked / cleaned reference data |
 | | FX match: `deposit_fx`, `withdrawal_fx`, `fee_fx` | as-of result per `live` fact: `key, fx_instant_ms, fx_rate_id, fx_rate, fx_quarantine_reason` |
 | **silver.shape** | `company`, `corporate_group` (attributes resolved); `deposit`, `withdrawal`, `fee` (GBP-normalised) | entity `attributes` flattened to columns; fact ⨝ its `*_fx` → `gbp_amount`, unresolved quarantined |
-| **gold.data_mart** | `entity` (+`source`), `edge_fact` (+`source`) | counterpart→group resolution; `focal_group × counterpart × direction × month` measures |
+| **gold.data_mart** | `entity` (+`source`), `edge_fact` (+`source`) | `entity` = groups + companies (Silver) + counterparties (`live`) with counterpart→group resolution + provenance; `edge_fact` = `focal_group × counterpart × direction × month` measures |
 | **gold.curated** | `node`, `edge` | final network product (circles/diamonds + directed edges); reads only from `data_mart` |
 
 > `group` is a SQL reserved word, so the group dimension is named `corporate_group` (avoids pervasive quoting).
@@ -138,7 +138,7 @@ docs/build_protocol.md      authoritative layer/schema layout
 plan/SPEC.md                requirements/spec
 plan/tickets.md             work breakdown + status
 plan/ARCHITECTURE.md        this document (design/topology)
-src/                        pipeline modules (config, naming, warehouse, bronze, silver_core, fx, reporting, pipeline)
+src/                        pipeline modules (config, naming, warehouse, bronze, silver_core, silver_shape, fx, gold, reporting, pipeline)
 tests/                      per-layer + FX unit tests
 notebook/pipeline.ipynb     thin orchestrator that calls src/
 submission/warehouse.duckdb built output (git-ignored)
