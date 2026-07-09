@@ -37,7 +37,7 @@ def test_twelve_month_tables_created(con):
             "WHERE table_schema = 'raw'"
         ).fetchall()
     }
-    for stream in ("deposits", "withdrawals"):
+    for stream in ("deposit", "withdrawal"):
         for ym in config.PERIOD_MONTHS:
             assert ("raw", f"{stream}_{ym.replace('-', '_')}") in tables
 
@@ -64,10 +64,10 @@ def test_each_row_lands_in_exactly_one_month(con):
     # in that month, so the six tables partition the source with no overlap.
     bronze.build_raw_monthly(con)
     for ym in config.PERIOD_MONTHS:
-        table = f"raw.deposits_{ym.replace('-', '_')}"
+        table = f"raw.deposit_{ym.replace('-', '_')}"
         off_month = con.execute(
             f"SELECT COUNT(*) FROM {table} "
-            f"WHERE CAST(date_trunc('month', \"Tx Date\") AS DATE) <> DATE '{ym}-01'"
+            f"WHERE CAST(date_trunc('month', tx_date) AS DATE) <> DATE '{ym}-01'"
         ).fetchone()[0]
         assert off_month == 0, f"{table} contains rows from another month"
 

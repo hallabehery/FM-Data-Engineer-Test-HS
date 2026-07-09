@@ -1,7 +1,7 @@
 """Silver `core` — first-pass JSON unpicking, clean facts, and the FX as-of match.
 
 The `core` schema does the heavy lifting: it flattens the nested JSON sources into
-queryable columns (`core.companies`, `core.groups`), lands the clean transaction/fee
+queryable columns (`core.company`, `core.corporate_group`), lands the clean transaction/fee
 **facts** (`core.deposit`/`withdrawal`/`fee`, kept pure — no FX, no GBP), persists the
 FX rate points as a dimension (`core.exchange_rate`), and resolves the FX as-of match
 into separate per-stream tables (`core.deposit_fx`/`withdrawal_fx`/`fee_fx`).
@@ -24,7 +24,7 @@ REASON_MISSING_INSTANT = "fx_missing_instant"
 
 
 def build_companies(con: duckdb.DuckDBPyConnection) -> StageReport:
-    """Unpick `companies.json` into `core.companies` (one row per `dcId`).
+    """Unpick `companies.json` into `core.company` (one row per `dcId`).
 
     Exposes the nested registration / classification / financials / footprint
     fields as columns and surfaces `relationships.parentGroup.value` as the group
@@ -45,7 +45,7 @@ def build_companies(con: duckdb.DuckDBPyConnection) -> StageReport:
 
     con.execute(
         f"""
-        CREATE OR REPLACE TABLE core.companies AS
+        CREATE OR REPLACE TABLE core.company AS
         SELECT
             r.dcId                                AS dc_id,
             r.registration.legalName              AS legal_name,
@@ -74,14 +74,14 @@ def build_companies(con: duckdb.DuckDBPyConnection) -> StageReport:
     rows_in = con.execute(
         f"SELECT len(records) FROM read_json_auto('{src}')"
     ).fetchone()[0]
-    rows_out = con.execute("SELECT COUNT(*) FROM core.companies").fetchone()[0]
+    rows_out = con.execute("SELECT COUNT(*) FROM core.company").fetchone()[0]
     return report_stage(
-        "silver.core.companies", rows_in=rows_in, rows_out=rows_out, kept=rows_out
+        "silver.core.company", rows_in=rows_in, rows_out=rows_out, kept=rows_out
     )
 
 
 def build_groups(con: duckdb.DuckDBPyConnection) -> StageReport:
-    """Unpick `groups.json` into `core.groups` (one row per `groupId`).
+    """Unpick `groups.json` into `core.corporate_group` (one row per `groupId`).
 
     Groups live under `result.groups`. Exposes the profile / segmentation /
     lifecycle fields as columns. The heterogeneous `attributes` array (whose
@@ -104,7 +104,7 @@ def build_groups(con: duckdb.DuckDBPyConnection) -> StageReport:
 
     con.execute(
         f"""
-        CREATE OR REPLACE TABLE core.groups AS
+        CREATE OR REPLACE TABLE core.corporate_group AS
         SELECT
             g.groupId                            AS group_id,
             g.profile.displayName                AS display_name,
@@ -124,9 +124,9 @@ def build_groups(con: duckdb.DuckDBPyConnection) -> StageReport:
     rows_in = con.execute(
         f"SELECT len(result.groups) FROM read_json_auto('{src}')"
     ).fetchone()[0]
-    rows_out = con.execute("SELECT COUNT(*) FROM core.groups").fetchone()[0]
+    rows_out = con.execute("SELECT COUNT(*) FROM core.corporate_group").fetchone()[0]
     return report_stage(
-        "silver.core.groups", rows_in=rows_in, rows_out=rows_out, kept=rows_out
+        "silver.core.corporate_group", rows_in=rows_in, rows_out=rows_out, kept=rows_out
     )
 
 
@@ -134,7 +134,7 @@ def build_groups(con: duckdb.DuckDBPyConnection) -> StageReport:
 # core facts are the conformed transaction/fee tables the rest of Silver/Gold read.
 # They carry only their own columns — no FX, no GBP. `live.fee` is typed (Bronze
 # lands Fees with inference), so these are typed pass-throughs of the `live` tables.
-_FACTS = {"deposit": "live.deposits", "withdrawal": "live.withdrawals", "fee": "live.fees"}
+_FACTS = {"deposit": "live.deposit", "withdrawal": "live.withdrawal", "fee": "live.fee"}
 
 
 def build_facts(con: duckdb.DuckDBPyConnection) -> list[StageReport]:
@@ -189,8 +189,8 @@ def build_exchange_rates(
 # --- FX as-of match (bridge; facts stay pure) --------------------------------
 # The settlement instant used for the as-of match: transactions carry a single
 # timestamp (Tx Date + Tx Time); fees carry only a Date, taken at midnight (UTC).
-_TXN_INSTANT_SQL = 'epoch_ms(CAST("Tx Date" AS DATE) + "Tx Time")'
-_FEE_INSTANT_SQL = 'epoch_ms("Date")'
+_TXN_INSTANT_SQL = "epoch_ms(CAST(tx_date AS DATE) + tx_time)"
+_FEE_INSTANT_SQL = "epoch_ms(fee_date)"
 
 
 def _match_fx(
@@ -232,7 +232,7 @@ def _match_fx(
         rate_id.append(result.rate_id)
         reason.append(result.quarantine_reason)
 
-    out = lookup.rename(columns={"_k": key_col.strip('"'), "_instant": "fx_instant_ms"})
+    out = lookup.rename(columns={"_k": key_col, "_instant": "fx_instant_ms"})
     out = out.drop(columns=["_ccy"])
     out["fx_rate_id"] = pd.array(rate_id, dtype="Int64")
     out["fx_rate"] = fx_rate
@@ -268,9 +268,9 @@ def build_fx_match(
         rates = fx.FxRates.load()
     return [
         _match_fx(con, rates, "deposit", "core.deposit_fx",
-                  '"Transaction ID"', '"Tx Currency"', _TXN_INSTANT_SQL, "silver.core.deposit_fx"),
+                  "transaction_id", "tx_currency", _TXN_INSTANT_SQL, "silver.core.deposit_fx"),
         _match_fx(con, rates, "withdrawal", "core.withdrawal_fx",
-                  '"Transaction ID"', '"Tx Currency"', _TXN_INSTANT_SQL, "silver.core.withdrawal_fx"),
+                  "transaction_id", "tx_currency", _TXN_INSTANT_SQL, "silver.core.withdrawal_fx"),
         _match_fx(con, rates, "fee", "core.fee_fx",
-                  '"FeeId"', '"Fee currency"', _FEE_INSTANT_SQL, "silver.core.fee_fx"),
+                  "fee_id", "fee_currency", _FEE_INSTANT_SQL, "silver.core.fee_fx"),
     ]

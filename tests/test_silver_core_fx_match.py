@@ -12,7 +12,7 @@ SKIP = pytest.mark.skipif(
     reason="source data not present",
 )
 
-FACT_KEYS = {"deposit": "Transaction ID", "withdrawal": "Transaction ID", "fee": "FeeId"}
+FACT_KEYS = {"deposit": "transaction_id", "withdrawal": "transaction_id", "fee": "fee_id"}
 FX_COLS = {"fx_instant_ms", "fx_rate_id", "fx_rate", "fx_quarantine_reason"}
 
 
@@ -40,7 +40,7 @@ def test_facts_are_pure_and_conserved(con):
 @SKIP
 def test_fee_date_is_typed_not_excel_serial(con):
     # Bronze fees-typing fix: fee Date lands as a TIMESTAMP, not a serial string.
-    dtype = con.execute("DESCRIBE core.fee").df().set_index("column_name").loc["Date", "column_type"]
+    dtype = con.execute("DESCRIBE core.fee").df().set_index("column_name").loc["fee_date", "column_type"]
     assert "TIMESTAMP" in dtype.upper()
 
 
@@ -97,8 +97,8 @@ def test_gbp_match_has_identity_rate_and_no_rate_id(con):
     bad = con.execute(
         """
         SELECT COUNT(*) FROM core.deposit d
-        JOIN core.deposit_fx m ON d."Transaction ID" = m."Transaction ID"
-        WHERE d."Tx Currency" = 'GBP' AND (m.fx_rate <> 1.0 OR m.fx_rate_id IS NOT NULL)
+        JOIN core.deposit_fx m ON d.transaction_id = m.transaction_id
+        WHERE d.tx_currency = 'GBP' AND (m.fx_rate <> 1.0 OR m.fx_rate_id IS NOT NULL)
         """
     ).fetchone()[0]
     assert bad == 0

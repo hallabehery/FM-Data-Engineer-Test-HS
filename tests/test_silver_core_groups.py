@@ -25,7 +25,7 @@ def test_row_count_matches_source(con):
     source_total = con.execute(
         f"SELECT export.recordCount FROM read_json_auto('{config.GROUPS_JSON}')"
     ).fetchone()[0]
-    table_rows = con.execute("SELECT COUNT(*) FROM core.groups").fetchone()[0]
+    table_rows = con.execute("SELECT COUNT(*) FROM core.corporate_group").fetchone()[0]
     assert table_rows == source_total
     assert report.rows_in == report.rows_out == table_rows
     assert report.conserved
@@ -37,7 +37,7 @@ def test_row_count_matches_source(con):
 def test_group_id_is_a_clean_natural_key(con):
     build_groups(con)
     total, non_null, distinct = con.execute(
-        "SELECT COUNT(*), COUNT(group_id), COUNT(DISTINCT group_id) FROM core.groups"
+        "SELECT COUNT(*), COUNT(group_id), COUNT(DISTINCT group_id) FROM core.corporate_group"
     ).fetchone()
     assert non_null == total, "group_id must be non-null for every row"
     assert distinct == total, "group_id must be unique (no duplicates)"
@@ -48,7 +48,7 @@ def test_group_id_is_a_clean_natural_key(con):
 )
 def test_profile_segmentation_lifecycle_columns_present(con):
     build_groups(con)
-    cols = {row[0] for row in con.execute("DESCRIBE core.groups").fetchall()}
+    cols = {row[0] for row in con.execute("DESCRIBE core.corporate_group").fetchall()}
     expected = {
         "display_name",
         "description",
@@ -74,7 +74,7 @@ def test_heterogeneous_attributes_survive_as_json(con):
     shapes = con.execute(
         """
         SELECT a.name, json_type(a.value) AS jtype, COUNT(*) AS n
-        FROM core.groups, unnest(from_json(attributes_json,
+        FROM core.corporate_group, unnest(from_json(attributes_json,
              '[{"name":"VARCHAR","value":"JSON","valueType":"VARCHAR"}]')) AS t(a)
         GROUP BY 1, 2
         ORDER BY 1
