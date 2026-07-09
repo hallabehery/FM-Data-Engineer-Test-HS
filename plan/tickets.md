@@ -121,7 +121,7 @@ cleanup step can normalise.
 - [x] Ingestion does not break on the scalar-or-object `attributes` values
 - [x] Row count matches the source record count
 
-## Silver `core` — clean facts, `exchange_rate` dim, and FX as-of match (facts stay pure)
+## ~~Silver `core` — clean facts, `exchange_rate` dim, and FX as-of match (facts stay pure)~~ ✅ DONE (`feature/silver-core-fx-match`, #8)
 
 **What to build:** Clean, typed transaction/fee **facts** (`core.deposit`, `core.withdrawal`,
 `core.fee`) that carry only their own columns — no FX, no GBP. The FX rate points land as their own
@@ -131,13 +131,13 @@ table is just the fact, and the chosen rate is still inspectable before any arit
 
 **Blocked by:** FX as-of conversion unit (pure, tested); Bronze `live` — consolidate deposits/withdrawals + land counterparty & fees.
 
-- [ ] `core.deposit` / `core.withdrawal` / `core.fee` are clean typed facts with **no** `fx_*` columns
-- [ ] `core.exchange_rate` holds the rate points (one row per interval: `rate_id, valid_from/till (+ *_ms), rate`)
-- [ ] `core.deposit_fx` / `core.withdrawal_fx` / `core.fee_fx` hold one row per fact: `key, fx_instant_ms, fx_rate_id, fx_rate, fx_quarantine_reason`
-- [ ] The settlement instant used for the as-of match is chosen and documented
-- [ ] Rows with no rate are flagged in the match table with a quarantine reason (not dropped here)
-- [ ] Lineage: `*_fx.fx_rate_id` joins `core.exchange_rate.rate_id` back to the exact point used
-- [ ] Conservation: each match table has exactly one row per fact (no fan-out, no loss)
+- [x] `core.deposit` / `core.withdrawal` / `core.fee` are clean typed facts with **no** `fx_*` columns
+- [x] `core.exchange_rate` holds the rate points (one row per interval: `rate_id, valid_from/till (+ *_ms), rate`)
+- [x] `core.deposit_fx` / `core.withdrawal_fx` / `core.fee_fx` hold one row per fact: `key, fx_instant_ms, fx_rate_id, fx_rate, fx_quarantine_reason`
+- [x] The settlement instant used for the as-of match is chosen and documented
+- [x] Rows with no rate are flagged in the match table with a quarantine reason (not dropped here)
+- [x] Lineage: `*_fx.fx_rate_id` joins `core.exchange_rate.rate_id` back to the exact point used
+- [x] Conservation: each match table has exactly one row per fact (no fan-out, no loss)
 
 ## Silver `shape` — heterogeneous attribute cleanup
 
