@@ -33,6 +33,7 @@ def main() -> None:
         silver_core.build_exchange_rates(con, fx_rates)
         silver_core.build_fx_match(con, fx_rates)
         silver_shape.build_entity_shape(con)
+        silver_shape.build_gbp_facts(con)
     finally:
         con.close()
     logger.info("pipeline done")

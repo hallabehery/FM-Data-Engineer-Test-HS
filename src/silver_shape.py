@@ -68,3 +68,77 @@ def build_entity_shape(con: duckdb.DuckDBPyConnection) -> list[StageReport]:
             con, "core.corporate_group", "shape.corporate_group", "silver.shape.corporate_group"
         ),
     ]
+
+
+# --- FX applied → GBP normalisation ------------------------------------------
+# (stream, key column, native amount column). Facts live in `live`; their FX match
+# lives in `core.<stream>_fx`. GBP = native amount × the matched rate.
+_GBP_FACTS = [
+    ("deposit", "transaction_id", "tx_value_ccy"),
+    ("withdrawal", "transaction_id", "tx_value_ccy"),
+    ("fee", "fee_id", "fee_amount_ccy"),
+]
+
+
+def _apply_fx(
+    con: duckdb.DuckDBPyConnection, stream: str, key_col: str, amount_col: str
+) -> StageReport:
+    """Join a `live` fact to its `core.*_fx` match, compute GBP, split promoted/quarantined.
+
+    Priced rows land in `shape.<stream>` with `gbp_amount = <amount> × fx_rate` (plus
+    `fx_rate`/`fx_rate_id` for lineage). Rows whose match carries a
+    `fx_quarantine_reason` are routed to `shape.<stream>_quarantine` (not priced), so no
+    wrong number reaches Gold.
+    """
+    fact, match = f"live.{stream}", f"core.{stream}_fx"
+    promoted, quarantine = f"shape.{stream}", f"shape.{stream}_quarantine"
+
+    # Join the fact to its match once, then split priced vs quarantined from the shared
+    # result. The join is inner: the 1:1 match invariant is asserted upstream in
+    # `silver_core._match_fx`, and the conservation guard below would raise if any fact
+    # row failed to match (it would appear in neither output).
+    con.execute(
+        f"""
+        CREATE OR REPLACE TEMP TABLE _shape_join AS
+        SELECT f.*, m.fx_rate_id, m.fx_rate, m.fx_quarantine_reason
+        FROM {fact} f
+        JOIN {match} m ON f.{key_col} = m.{key_col}
+        """
+    )
+    con.execute(
+        f"""
+        CREATE OR REPLACE TABLE {promoted} AS
+        SELECT * EXCLUDE (fx_quarantine_reason), ({amount_col} * fx_rate) AS gbp_amount
+        FROM _shape_join
+        WHERE fx_quarantine_reason IS NULL
+        """
+    )
+    con.execute(
+        f"""
+        CREATE OR REPLACE TABLE {quarantine} AS
+        SELECT * EXCLUDE (fx_rate_id, fx_rate)
+        FROM _shape_join
+        WHERE fx_quarantine_reason IS NOT NULL
+        """
+    )
+    con.execute("DROP TABLE _shape_join")
+
+    n_in = con.execute(f"SELECT COUNT(*) FROM {fact}").fetchone()[0]
+    n_promoted = con.execute(f"SELECT COUNT(*) FROM {promoted}").fetchone()[0]
+    n_quarantined = con.execute(f"SELECT COUNT(*) FROM {quarantine}").fetchone()[0]
+    if n_promoted + n_quarantined != n_in:
+        raise ValueError(
+            f"shape.{stream}: promoted {n_promoted} + quarantined {n_quarantined} != input {n_in}"
+        )
+    return report_stage(
+        f"silver.shape.{stream}",
+        rows_in=n_in,
+        rows_out=n_promoted,
+        kept=n_promoted,
+        quarantined=n_quarantined,
+    )
+
+
+def build_gbp_facts(con: duckdb.DuckDBPyConnection) -> list[StageReport]:
+    """Apply FX to each fact → GBP-normalised `shape.<stream>` (+ quarantine). Idempotent."""
+    return [_apply_fx(con, stream, key, amount) for stream, key, amount in _GBP_FACTS]
