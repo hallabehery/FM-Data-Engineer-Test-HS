@@ -86,8 +86,8 @@ def build_entity(con: duckdb.DuckDBPyConnection) -> StageReport:
     return report_stage("gold.data_mart.entity", rows_in=total, rows_out=total, kept=total)
 
 
-def build_edge_fact(con: duckdb.DuckDBPyConnection) -> StageReport:
-    """Build `data_mart.edge_fact` — the directed money-flow edges. Idempotent.
+def build_money_flow(con: duckdb.DuckDBPyConnection) -> StageReport:
+    """Build `data_mart.money_flow` — the directed money-flow aggregate. Idempotent.
 
     Grain: `focal_group × focal_company × counterpart × direction × month`, with additive
     measures `gbp_volume`, `txn_count`, `gbp_fee_revenue`. The fact is stored at its
@@ -108,7 +108,7 @@ def build_edge_fact(con: duckdb.DuckDBPyConnection) -> StageReport:
     """
     con.execute(
         """
-        CREATE OR REPLACE TABLE data_mart.edge_fact AS
+        CREATE OR REPLACE TABLE data_mart.money_flow AS
         WITH txn AS (
             SELECT 'inflow' AS direction, 'Deposit' AS txn_type, transaction_id, dc_id,
                    counterparty_id, gbp_amount,
@@ -163,7 +163,7 @@ def build_edge_fact(con: duckdb.DuckDBPyConnection) -> StageReport:
 
     # Conservation: measures reconcile to the promoted Silver facts, no fan-out.
     vol, cnt, fee = con.execute(
-        "SELECT SUM(gbp_volume), SUM(txn_count), SUM(gbp_fee_revenue) FROM data_mart.edge_fact"
+        "SELECT SUM(gbp_volume), SUM(txn_count), SUM(gbp_fee_revenue) FROM data_mart.money_flow"
     ).fetchone()
     src_vol = con.execute(
         "SELECT (SELECT SUM(gbp_amount) FROM shape.deposit) "
@@ -174,18 +174,18 @@ def build_edge_fact(con: duckdb.DuckDBPyConnection) -> StageReport:
     ).fetchone()[0]
     src_fee = con.execute("SELECT SUM(gbp_amount) FROM shape.fee").fetchone()[0]
     if cnt != src_cnt:
-        raise ValueError(f"edge_fact txn_count {cnt} != promoted transactions {src_cnt} (fan-out?)")
+        raise ValueError(f"money_flow txn_count {cnt} != promoted transactions {src_cnt} (fan-out?)")
     if abs(vol - src_vol) > 1e-3:
-        raise ValueError(f"edge_fact gbp_volume {vol} != promoted GBP {src_vol}")
+        raise ValueError(f"money_flow gbp_volume {vol} != promoted GBP {src_vol}")
     if abs(fee - src_fee) > 1e-3:
-        raise ValueError(f"edge_fact gbp_fee_revenue {fee} != promoted fee GBP {src_fee}")
+        raise ValueError(f"money_flow gbp_fee_revenue {fee} != promoted fee GBP {src_fee}")
 
-    # This is an aggregation (many transactions → one edge), so row-count conservation
-    # doesn't apply; the measure reconciliation above is the invariant. Report the edge
-    # count and log the transaction → edge collapse explicitly.
-    n_edges = con.execute("SELECT COUNT(*) FROM data_mart.edge_fact").fetchone()[0]
+    # This is an aggregation (many transactions → one money-flow row), so row-count
+    # conservation doesn't apply; the measure reconciliation above is the invariant. Report
+    # the money-flow row count and log the transaction → money-flow collapse explicitly.
+    n_flows = con.execute("SELECT COUNT(*) FROM data_mart.money_flow").fetchone()[0]
     logger.info(
-        f"[gold.data_mart.edge_fact] {src_cnt} transactions -> {n_edges} edges; "
+        f"[gold.data_mart.money_flow] {src_cnt} transactions -> {n_flows} money-flow rows; "
         "gbp_volume / txn_count / gbp_fee_revenue reconciled to Silver"
     )
-    return report_stage("gold.data_mart.edge_fact", rows_in=n_edges, rows_out=n_edges, kept=n_edges)
+    return report_stage("gold.data_mart.money_flow", rows_in=n_flows, rows_out=n_flows, kept=n_flows)

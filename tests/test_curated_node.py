@@ -27,7 +27,7 @@ def con(tmp_path):
     silver_shape.build_entity_shape(c)
     silver_shape.build_gbp_facts(c)
     gold.build_entity(c)
-    gold.build_edge_fact(c)
+    gold.build_money_flow(c)
     yield c
     c.close()
 
@@ -35,10 +35,10 @@ def con(tmp_path):
 @SKIP
 def test_every_edge_node_present_exactly_once(con):
     report = gold_curated.build_node(con)
-    # Distinct endpoints of edge_fact (either end) == node rows, each present once.
+    # Distinct endpoints of money_flow (either end) == node rows, each present once.
     endpoints = con.execute(
-        "SELECT COUNT(*) FROM (SELECT focal_group_id AS n FROM data_mart.edge_fact "
-        "UNION SELECT counterpart_id FROM data_mart.edge_fact)"
+        "SELECT COUNT(*) FROM (SELECT focal_group_id AS n FROM data_mart.money_flow "
+        "UNION SELECT counterpart_id FROM data_mart.money_flow)"
     ).fetchone()[0]
     n_nodes = con.execute("SELECT COUNT(*) FROM curated.node").fetchone()[0]
     assert n_nodes == endpoints == report.rows_out
@@ -48,8 +48,8 @@ def test_every_edge_node_present_exactly_once(con):
     assert dup == 0
     # Every endpoint resolves to a node (no loss).
     unresolved = con.execute(
-        "SELECT COUNT(*) FROM (SELECT focal_group_id AS n FROM data_mart.edge_fact "
-        "UNION SELECT counterpart_id FROM data_mart.edge_fact) en "
+        "SELECT COUNT(*) FROM (SELECT focal_group_id AS n FROM data_mart.money_flow "
+        "UNION SELECT counterpart_id FROM data_mart.money_flow) en "
         "WHERE en.n NOT IN (SELECT node_id FROM curated.node)"
     ).fetchone()[0]
     assert unresolved == 0

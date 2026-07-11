@@ -7,7 +7,7 @@ expects — `node` (`build_node`) and `edge` (`build_edge`).
 `build_node` lands `curated.node`: exactly one row per node that participates in an
 edge, typed by shape — **group nodes (circles)** for counterparts that resolve to one
 of our groups, **standalone nodes (diamonds)** for those that do not. A node
-participates if it appears on either end of a `data_mart.edge_fact` row (as a
+participates if it appears on either end of a `data_mart.money_flow` row (as a
 `focal_group_id` or a `counterpart_id`); its display attributes come from the
 `data_mart.entity` dimension. Companies and group-resolved counterparties are *not*
 nodes — the drill level and resolved counterparts are represented by their group's
@@ -29,7 +29,7 @@ from .reporting import StageReport, report_stage
 def build_node(con: duckdb.DuckDBPyConnection) -> StageReport:
     """Build `curated.node` — the network nodes (circles + diamonds). Idempotent.
 
-    Reads only from `data_mart` (`edge_fact` for participation, `entity` for the node
+    Reads only from `data_mart` (`money_flow` for participation, `entity` for the node
     attributes). Raises if any edge endpoint fails to resolve to a node, or if the
     join fans a single endpoint out to more than one node (an id-domain collision).
     """
@@ -37,9 +37,9 @@ def build_node(con: duckdb.DuckDBPyConnection) -> StageReport:
         """
         CREATE OR REPLACE TABLE curated.node AS
         WITH edge_node AS (  -- every id on either end of an edge, de-duplicated
-            SELECT focal_group_id AS node_id FROM data_mart.edge_fact
+            SELECT focal_group_id AS node_id FROM data_mart.money_flow
             UNION
-            SELECT counterpart_id AS node_id FROM data_mart.edge_fact
+            SELECT counterpart_id AS node_id FROM data_mart.money_flow
         )
         SELECT e.entity_id     AS node_id,
                e.name          AS name,
@@ -61,8 +61,8 @@ def build_node(con: duckdb.DuckDBPyConnection) -> StageReport:
     # that resolved to no node) and no fan-out (an id matching more than one node row).
     n_endpoints = con.execute(
         "SELECT COUNT(*) FROM ("
-        "SELECT focal_group_id AS node_id FROM data_mart.edge_fact "
-        "UNION SELECT counterpart_id FROM data_mart.edge_fact)"
+        "SELECT focal_group_id AS node_id FROM data_mart.money_flow "
+        "UNION SELECT counterpart_id FROM data_mart.money_flow)"
     ).fetchone()[0]
     n_nodes = con.execute("SELECT COUNT(*) FROM curated.node").fetchone()[0]
     if n_nodes != n_endpoints:
@@ -85,7 +85,7 @@ def build_node(con: duckdb.DuckDBPyConnection) -> StageReport:
 def build_edge(con: duckdb.DuckDBPyConnection) -> StageReport:
     """Build `curated.edge` — the directed money-flow edges. Idempotent.
 
-    Reads only from `data_mart.edge_fact`. A 1:1 projection of the fact (finest grain:
+    Reads only from `data_mart.money_flow`. A 1:1 projection of the fact (finest grain:
     `focal_group × focal_company × counterpart × direction × month`) into the shape a graph
     tool renders directly:
 
@@ -99,7 +99,7 @@ def build_edge(con: duckdb.DuckDBPyConnection) -> StageReport:
       that actually transacted) — the group view is the sum over its companies.
 
     Raises if the projection loses/duplicates rows or if the measures do not reconcile to
-    `data_mart.edge_fact`.
+    `data_mart.money_flow`.
     """
     con.execute(
         """
@@ -121,28 +121,28 @@ def build_edge(con: duckdb.DuckDBPyConnection) -> StageReport:
             txn_count,
             gbp_fee_revenue,
             source
-        FROM data_mart.edge_fact
+        FROM data_mart.money_flow
         ORDER BY focal_group_id, focal_company_id, counterpart_id, direction, month
         """
     )
 
     # Conservation: 1:1 projection — no row loss/fan-out, and measures reconcile to the fact.
-    n_fact = con.execute("SELECT COUNT(*) FROM data_mart.edge_fact").fetchone()[0]
+    n_fact = con.execute("SELECT COUNT(*) FROM data_mart.money_flow").fetchone()[0]
     n_edge = con.execute("SELECT COUNT(*) FROM curated.edge").fetchone()[0]
     if n_edge != n_fact:
         raise ValueError(
-            f"curated.edge: {n_edge} edges != {n_fact} data_mart.edge_fact rows "
+            f"curated.edge: {n_edge} edges != {n_fact} data_mart.money_flow rows "
             "(projection lost or duplicated rows)"
         )
     e_vol, e_cnt, e_fee = con.execute(
         "SELECT SUM(gbp_volume), SUM(txn_count), SUM(gbp_fee_revenue) FROM curated.edge"
     ).fetchone()
     f_vol, f_cnt, f_fee = con.execute(
-        "SELECT SUM(gbp_volume), SUM(txn_count), SUM(gbp_fee_revenue) FROM data_mart.edge_fact"
+        "SELECT SUM(gbp_volume), SUM(txn_count), SUM(gbp_fee_revenue) FROM data_mart.money_flow"
     ).fetchone()
     if e_cnt != f_cnt or abs(e_vol - f_vol) > 1e-3 or abs(e_fee - f_fee) > 1e-3:
         raise ValueError(
-            "curated.edge measures do not reconcile to data_mart.edge_fact "
+            "curated.edge measures do not reconcile to data_mart.money_flow "
             f"(vol {e_vol} vs {f_vol}, cnt {e_cnt} vs {f_cnt}, fee {e_fee} vs {f_fee})"
         )
 

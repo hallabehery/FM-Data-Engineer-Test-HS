@@ -35,7 +35,7 @@ def main() -> None:
         silver_shape.build_entity_shape(con)
         silver_shape.build_gbp_facts(con)
         gold.build_entity(con)
-        gold.build_edge_fact(con)
+        gold.build_money_flow(con)
         gold_curated.build_node(con)
         gold_curated.build_edge(con)
     finally:

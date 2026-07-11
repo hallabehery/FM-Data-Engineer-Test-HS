@@ -53,7 +53,7 @@ columns on the fact.
 | **silver.core** | dims: `company`, `corporate_group`, `exchange_rate` | unpicked / cleaned reference data |
 | | FX match: `deposit_fx`, `withdrawal_fx`, `fee_fx` | as-of result per `live` fact: `key, fx_instant_ms, fx_rate_id, fx_rate, fx_quarantine_reason` |
 | **silver.shape** | `company`, `corporate_group` (attributes resolved); `deposit`, `withdrawal`, `fee` (GBP-normalised) | entity `attributes` flattened to columns; fact ⨝ its `*_fx` → `gbp_amount`, unresolved quarantined |
-| **gold.data_mart** | `entity` (+`source`), `edge_fact` (+`source`) | `entity` = groups + companies (Silver) + counterparties (`live`) with counterpart→group resolution + provenance; `edge_fact` = `focal_group × focal_company × counterpart × direction × month` measures (finest grain; group view is the roll-up) |
+| **gold.data_mart** | `entity` (+`source`), `money_flow` (+`source`) | `entity` = groups + companies (Silver) + counterparties (`live`) with counterpart→group resolution + provenance; `money_flow` = `focal_group × focal_company × counterpart × direction × month` measures (finest grain; group view is the roll-up) |
 | **gold.curated** | `node`, `edge` | final network product: `node` = circle/diamond nodes participating in edges; `edge` = directed `source→target` edges with GBP volume/count/fee, sliceable by month/year and drillable group↔company; reads only from `data_mart` |
 
 > `group` is a SQL reserved word, so the group dimension is named `corporate_group` (avoids pervasive quoting).
@@ -77,7 +77,7 @@ Excel Fees ───────────────────────
                                       gbp_amount = tx_value_ccy × fx_rate   (+ quarantine unpriceable)
                     shape.withdrawal / shape.fee   (same pattern)
                                                      │
-                    gold.data_mart.entity   +   gold.data_mart.edge_fact
+                    gold.data_mart.entity   +   gold.data_mart.money_flow
                                                      │   (curated reads only from data_mart)
                     gold.curated.node       +   gold.curated.edge   ──►  network view
 ```
