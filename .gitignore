@@ -8,6 +8,9 @@ warehouse.duckdb.wal
 *.duckdb
 *.duckdb.wal
 
+# --- Illustrative render (build output — regenerate with `make render`) ---
+submission/star_map.html
+
 # --- Python ---
 .venv/
 venv/
