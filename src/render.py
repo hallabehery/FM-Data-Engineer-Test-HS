@@ -35,6 +35,23 @@ DEFAULT_OUTPUT: Path = config.SUBMISSION_DIR / "star_map.html"
 # pyvis node shapes mapped from curated's node_shape vocabulary.
 _PYVIS_SHAPE: dict[str, str] = {"circle": "dot", "diamond": "diamond"}
 
+# vis.js layout: a force-directed spread so the hub-and-spoke opens up and the (long) edge
+# labels separate instead of piling up at the centre; white haloes keep text legible over the
+# lines; curved edges pull the inflow/outflow pair between the same nodes apart.
+_LAYOUT_OPTIONS: str = """{
+  "physics": {
+    "barnesHut": {"gravitationalConstant": -30000, "centralGravity": 0.25,
+                  "springLength": 260, "springConstant": 0.03, "avoidOverlap": 0.6},
+    "stabilization": {"iterations": 250}
+  },
+  "nodes": {"font": {"size": 16, "strokeWidth": 4, "strokeColor": "#ffffff"}},
+  "edges": {
+    "font": {"size": 11, "strokeWidth": 5, "strokeColor": "#ffffff", "align": "top"},
+    "smooth": {"type": "curvedCW", "roundness": 0.15},
+    "arrows": {"to": {"scaleFactor": 0.7}}
+  }
+}"""
+
 
 def default_focal_group(con: duckdb.DuckDBPyConnection) -> str:
     """Return the focal group with the largest total GBP volume — a sensible render default."""
@@ -186,6 +203,7 @@ def render_star_map(
             title=f"{e['direction']}: {_edge_label(e)}",
             color="#4c9f70" if e["direction"] == "inflow" else "#e4572e",
         )
+    net.set_options(_LAYOUT_OPTIONS)
     net.write_html(str(out), notebook=notebook, open_browser=False)
     return out
 
