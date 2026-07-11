@@ -111,7 +111,9 @@ def build_edge_fact(con: duckdb.DuckDBPyConnection) -> StageReport:
                    CAST(date_trunc('month', tx_date) AS DATE)
             FROM shape.withdrawal
         ),
-        fee_rev AS (  -- one fee total per (transaction, stream) — no txn fan-out on join
+        fee_rev AS (  -- one fee total per (transaction, stream) — no txn fan-out on join.
+            -- fee_type is 'Deposit'/'Withdrawal', matching txn.txn_type above: the
+            -- (link_id, fee_type) key must share txn's txn_type domain for the join to attach.
             SELECT link_id, fee_type, SUM(gbp_amount) AS fee_gbp
             FROM shape.fee GROUP BY link_id, fee_type
         ),

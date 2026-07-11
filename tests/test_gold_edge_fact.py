@@ -34,13 +34,6 @@ def con(tmp_path):
 @SKIP
 def test_grain_is_unique(con):
     gold.build_edge_fact(con)
-    total, distinct = con.execute(
-        """
-        SELECT COUNT(*),
-               COUNT(*) FILTER (WHERE TRUE)
-        FROM data_mart.edge_fact
-        """
-    ).fetchone()
     dup = con.execute(
         """
         SELECT COUNT(*) FROM (
