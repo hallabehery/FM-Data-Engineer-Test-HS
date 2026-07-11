@@ -35,6 +35,7 @@ def main() -> None:
         silver_shape.build_entity_shape(con)
         silver_shape.build_gbp_facts(con)
         gold.build_entity(con)
+        gold.build_edge_fact(con)
     finally:
         con.close()
     logger.info("pipeline done")

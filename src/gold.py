@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import duckdb
 
-from .reporting import StageReport, report_stage
+from .reporting import StageReport, logger, report_stage
 
 
 def build_entity(con: duckdb.DuckDBPyConnection) -> StageReport:
@@ -84,3 +84,97 @@ def build_entity(con: duckdb.DuckDBPyConnection) -> StageReport:
             )
     total = sum(expected.values())
     return report_stage("gold.data_mart.entity", rows_in=total, rows_out=total, kept=total)
+
+
+def build_edge_fact(con: duckdb.DuckDBPyConnection) -> StageReport:
+    """Build `data_mart.edge_fact` — the directed money-flow edges. Idempotent.
+
+    Grain: `focal_group × counterpart × direction × month`, with additive measures
+    `gbp_volume`, `txn_count`, `gbp_fee_revenue`. Direction convention: **deposit = inflow**
+    (money into the focal group), **withdrawal = outflow**. The focal group is the
+    transacting company's parent group (`dc_id → company → group`); the counterpart is the
+    counterparty resolved to its group where possible (`data_mart.entity`), else the
+    standalone counterparty itself. Fees attach to their transaction by
+    `(link_id, fee_type)` — disambiguating the transaction IDs shared across the two streams.
+    Each row carries a `source` provenance list. Raises on join fan-out/loss.
+    """
+    con.execute(
+        """
+        CREATE OR REPLACE TABLE data_mart.edge_fact AS
+        WITH txn AS (
+            SELECT 'inflow' AS direction, 'Deposit' AS txn_type, transaction_id, dc_id,
+                   counterparty_id, gbp_amount,
+                   CAST(date_trunc('month', tx_date) AS DATE) AS month
+            FROM shape.deposit
+            UNION ALL
+            SELECT 'outflow', 'Withdrawal', transaction_id, dc_id, counterparty_id, gbp_amount,
+                   CAST(date_trunc('month', tx_date) AS DATE)
+            FROM shape.withdrawal
+        ),
+        fee_rev AS (  -- one fee total per (transaction, stream) — no txn fan-out on join.
+            -- fee_type is 'Deposit'/'Withdrawal', matching txn.txn_type above: the
+            -- (link_id, fee_type) key must share txn's txn_type domain for the join to attach.
+            SELECT link_id, fee_type, SUM(gbp_amount) AS fee_gbp
+            FROM shape.fee GROUP BY link_id, fee_type
+        ),
+        resolved AS (
+            SELECT t.direction, t.month, t.gbp_amount,
+                   fc.group_id                                   AS focal_group_id,
+                   COALESCE(cpe.group_id, cpe.entity_id)         AS counterpart_id,
+                   NOT cpe.is_standalone                         AS counterpart_is_group,
+                   COALESCE(fr.fee_gbp, 0.0)                     AS fee_gbp
+            FROM txn t
+            JOIN data_mart.entity fc
+                 ON fc.entity_kind = 'company' AND fc.entity_id = t.dc_id
+            JOIN data_mart.entity cpe
+                 ON cpe.entity_kind = 'counterparty' AND cpe.entity_id = t.counterparty_id
+            LEFT JOIN fee_rev fr
+                 ON fr.link_id = t.transaction_id AND fr.fee_type = t.txn_type
+        ),
+        agg AS (
+            SELECT focal_group_id, counterpart_id, counterpart_is_group, direction, month,
+                   SUM(gbp_amount)  AS gbp_volume,
+                   COUNT(*)         AS txn_count,
+                   SUM(fee_gbp)     AS gbp_fee_revenue
+            FROM resolved
+            GROUP BY focal_group_id, counterpart_id, counterpart_is_group, direction, month
+        )
+        SELECT *,
+               list_distinct(
+                   [IF(direction = 'inflow', 'deposits', 'withdrawals'),
+                    'companies.json', 'groups.json']
+                   || IF(gbp_fee_revenue > 0, ['fees'], []::VARCHAR[])
+                   || IF(counterpart_is_group, []::VARCHAR[], ['counterparty'])
+               ) AS source
+        FROM agg
+        """
+    )
+
+    # Conservation: measures reconcile to the promoted Silver facts, no fan-out.
+    vol, cnt, fee = con.execute(
+        "SELECT SUM(gbp_volume), SUM(txn_count), SUM(gbp_fee_revenue) FROM data_mart.edge_fact"
+    ).fetchone()
+    src_vol = con.execute(
+        "SELECT (SELECT SUM(gbp_amount) FROM shape.deposit) "
+        "+ (SELECT SUM(gbp_amount) FROM shape.withdrawal)"
+    ).fetchone()[0]
+    src_cnt = con.execute(
+        "SELECT (SELECT COUNT(*) FROM shape.deposit) + (SELECT COUNT(*) FROM shape.withdrawal)"
+    ).fetchone()[0]
+    src_fee = con.execute("SELECT SUM(gbp_amount) FROM shape.fee").fetchone()[0]
+    if cnt != src_cnt:
+        raise ValueError(f"edge_fact txn_count {cnt} != promoted transactions {src_cnt} (fan-out?)")
+    if abs(vol - src_vol) > 1e-3:
+        raise ValueError(f"edge_fact gbp_volume {vol} != promoted GBP {src_vol}")
+    if abs(fee - src_fee) > 1e-3:
+        raise ValueError(f"edge_fact gbp_fee_revenue {fee} != promoted fee GBP {src_fee}")
+
+    # This is an aggregation (many transactions → one edge), so row-count conservation
+    # doesn't apply; the measure reconciliation above is the invariant. Report the edge
+    # count and log the transaction → edge collapse explicitly.
+    n_edges = con.execute("SELECT COUNT(*) FROM data_mart.edge_fact").fetchone()[0]
+    logger.info(
+        f"[gold.data_mart.edge_fact] {src_cnt} transactions -> {n_edges} edges; "
+        "gbp_volume / txn_count / gbp_fee_revenue reconciled to Silver"
+    )
+    return report_stage("gold.data_mart.edge_fact", rows_in=n_edges, rows_out=n_edges, kept=n_edges)
