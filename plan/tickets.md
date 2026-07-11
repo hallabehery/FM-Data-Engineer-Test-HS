@@ -227,7 +227,7 @@ year and drillable up and down the group ↔ company hierarchy.
 - [x] Group-to-group flows between two of our own groups are visible
 - [x] Edges are resolvable at direct-company grain so the hierarchy can expand/collapse
 
-## Consolidated conservation test suite
+## ~~Consolidated conservation test suite~~ ✅ DONE (`feature/conservation-suite`, #14)
 
 **What to build:** The single test pass that runs every layer's own conservation invariant (each
 asserted in its own ticket) *plus* the cross-boundary invariants that no single layer owns — end-to-end
@@ -236,10 +236,15 @@ is the one command a reviewer runs to see the pipeline is trustworthy; a failing
 
 **Blocked by:** Gold `curated` — directed edges, slicing & drill.
 
-- [ ] All per-layer invariants (from their tickets) run and pass as one suite
-- [ ] End-to-end: no unexplained row loss or measure fan-out across Bronze → Silver → Gold
-- [ ] Quarantine ledger reconciles end-to-end: total input − total promoted = total quarantined, by reason
-- [ ] The suite runs via the single documented command and gates the build (any failure = red)
+- [x] All per-layer invariants (from their tickets) run and pass as one suite
+- [x] End-to-end: no unexplained row loss or measure fan-out across Bronze → Silver → Gold
+- [x] Quarantine ledger reconciles end-to-end: total input − total promoted = total quarantined, by reason
+- [x] The suite runs via the single documented command and gates the build (any failure = red)
+
+Delivered as `tests/test_conservation.py`: builds the whole spine once (module fixture), re-states each
+layer's invariant, then asserts the end-to-end row spine (12,982 transactions never lost), the GBP
+measure spine (Silver → `edge_fact` → `curated.edge`), and the quarantine ledger (42 null-currency fees
+→ `fx_missing_currency`). Runs under the existing `make test` / `make all`.
 
 ## Reconciliation against the reference snapshot
 
