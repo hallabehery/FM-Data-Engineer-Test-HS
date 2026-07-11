@@ -27,7 +27,7 @@ def con(tmp_path):
     silver_shape.build_entity_shape(c)
     silver_shape.build_gbp_facts(c)
     gold.build_entity(c)
-    gold.build_edge_fact(c)
+    gold.build_money_flow(c)
     gold_curated.build_node(c)
     yield c
     c.close()
@@ -41,13 +41,13 @@ def test_edges_carry_measures_and_reconcile(con):
         "SELECT SUM(gbp_volume), SUM(txn_count), SUM(gbp_fee_revenue) FROM curated.edge"
     ).fetchone()
     f_vol, f_cnt, f_fee = con.execute(
-        "SELECT SUM(gbp_volume), SUM(txn_count), SUM(gbp_fee_revenue) FROM data_mart.edge_fact"
+        "SELECT SUM(gbp_volume), SUM(txn_count), SUM(gbp_fee_revenue) FROM data_mart.money_flow"
     ).fetchone()
     assert e_cnt == f_cnt
     assert abs(e_vol - f_vol) < 1e-3
     assert abs(e_fee - f_fee) < 1e-3
     # 1:1 projection of the fact — no loss or fan-out.
-    assert report.rows_out == con.execute("SELECT COUNT(*) FROM data_mart.edge_fact").fetchone()[0]
+    assert report.rows_out == con.execute("SELECT COUNT(*) FROM data_mart.money_flow").fetchone()[0]
     # No null measures.
     assert con.execute(
         "SELECT COUNT(*) FROM curated.edge "

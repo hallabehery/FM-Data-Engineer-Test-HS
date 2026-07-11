@@ -28,7 +28,7 @@ fact. (This supersedes the earlier approach that put `fx_rate`/`fx_rate_id` on `
 | **silver.core** | dims: `company`, `corporate_group`, `counterparty`, `exchange_rate` | unpicked / cleaned reference data |
 | | FX match (bridge): `deposit_fx`, `withdrawal_fx`, `fee_fx` | as-of result per `live` fact: `key, fx_instant_ms, fx_rate_id, fx_rate, fx_quarantine_reason` |
 | **silver.shape** | `deposit`, `withdrawal`, `fee` (GBP-normalised) | fact ⨝ its `*_fx` → `gbp_amount`; unresolved quarantined; entity attributes resolved |
-| **gold.data_mart** | `entity` (+`source`), `edge_fact` (+`source`) | counterpart→group resolution; `focal_group × focal_company × counterpart × direction × month` measures (finest grain; group view rolls up) |
+| **gold.data_mart** | `entity` (+`source`), `money_flow` (+`source`) | counterpart→group resolution; `focal_group × focal_company × counterpart × direction × month` measures (finest grain; group view rolls up) |
 | **gold.curated** | `node`, `edge` | final network product (circles/diamonds + directed edges, month/year sliceable, group↔company drillable); reads only from `data_mart` |
 
 Flow: `raw` → `live` (facts) → `core` (dims + FX match) → `shape` (apply FX → GBP) → `data_mart`
@@ -215,7 +215,7 @@ transformation: directed edges carrying GBP volume, count and fee revenue, slice
 year and drillable up and down the group ↔ company hierarchy.
 
 > **Refines #11's edge fact.** To attribute a flow to the entity that actually transacted (SPEC user
-> story 9) and make edges drillable, `data_mart.edge_fact` now carries `focal_company_id` at its
+> story 9) and make edges drillable, `data_mart.money_flow` now carries `focal_company_id` at its
 > finest grain (`focal_group × focal_company × counterpart × direction × month`). The SPEC's group
 > grain is the default roll-up — a strict refinement (summing over `focal_company` reproduces it
 > exactly); measure totals are unchanged.
@@ -243,7 +243,7 @@ is the one command a reviewer runs to see the pipeline is trustworthy; a failing
 
 Delivered as `tests/test_conservation.py`: builds the whole spine once (module fixture), re-states each
 layer's invariant, then asserts the end-to-end row spine (12,982 transactions never lost), the GBP
-measure spine (Silver → `edge_fact` → `curated.edge`), and the quarantine ledger (42 null-currency fees
+measure spine (Silver → `money_flow` → `curated.edge`), and the quarantine ledger (42 null-currency fees
 → `fx_missing_currency`). Runs under the existing `make test` / `make all`.
 
 ## Reconciliation against the reference snapshot

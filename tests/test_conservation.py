@@ -62,7 +62,7 @@ def con(tmp_path_factory):
     silver_shape.build_gbp_facts(c)
     # Gold
     gold.build_entity(c)
-    gold.build_edge_fact(c)
+    gold.build_money_flow(c)
     gold_curated.build_node(c)
     gold_curated.build_edge(c)
     yield c
@@ -129,8 +129,8 @@ def test_gold_entity_and_nodes_reconcile(con):
     )
     assert kinds == {"group": 13, "company": 44, "counterparty": COUNTERPARTIES}
     endpoints = con.execute(
-        "SELECT COUNT(*) FROM (SELECT focal_group_id AS n FROM data_mart.edge_fact "
-        "UNION SELECT counterpart_id FROM data_mart.edge_fact)"
+        "SELECT COUNT(*) FROM (SELECT focal_group_id AS n FROM data_mart.money_flow "
+        "UNION SELECT counterpart_id FROM data_mart.money_flow)"
     ).fetchone()[0]
     assert _count(con, "curated.node") == endpoints
 
@@ -142,7 +142,7 @@ def test_end_to_end_transaction_rows_never_lost(con):
     """Row spine: every transaction flows Bronze → Silver → Gold with none lost or fanned out.
 
     Transactions are never quarantined, so the count is invariant the whole way down and
-    lands as edge_fact / curated.edge `txn_count`.
+    lands as money_flow / curated.edge `txn_count`.
     """
     raw = sum(
         _count(con, f"raw.{s}_{ym.replace('-', '_')}")
@@ -150,9 +150,9 @@ def test_end_to_end_transaction_rows_never_lost(con):
     )
     live = _count(con, "live.deposit") + _count(con, "live.withdrawal")
     promoted = _count(con, "shape.deposit") + _count(con, "shape.withdrawal")
-    edge_fact_cnt = con.execute("SELECT SUM(txn_count) FROM data_mart.edge_fact").fetchone()[0]
+    money_flow_cnt = con.execute("SELECT SUM(txn_count) FROM data_mart.money_flow").fetchone()[0]
     curated_cnt = con.execute("SELECT SUM(txn_count) FROM curated.edge").fetchone()[0]
-    assert raw == live == promoted == edge_fact_cnt == curated_cnt == TRANSACTIONS
+    assert raw == live == promoted == money_flow_cnt == curated_cnt == TRANSACTIONS
 
 
 @SKIP
@@ -160,7 +160,7 @@ def test_end_to_end_gbp_measures_conserved(con):
     """Measure spine: Σ GBP volume and Σ GBP fee revenue are invariant Silver → Gold.
 
     No aggregation step invents or drops value: the promoted Silver GBP totals equal the
-    edge_fact measures, which equal the curated.edge measures.
+    money_flow measures, which equal the curated.edge measures.
     """
     shape_vol = con.execute(
         "SELECT (SELECT SUM(gbp_amount) FROM shape.deposit) "
@@ -169,7 +169,7 @@ def test_end_to_end_gbp_measures_conserved(con):
     shape_fee = con.execute("SELECT SUM(gbp_amount) FROM shape.fee").fetchone()[0]
 
     fact_vol, fact_fee = con.execute(
-        "SELECT SUM(gbp_volume), SUM(gbp_fee_revenue) FROM data_mart.edge_fact"
+        "SELECT SUM(gbp_volume), SUM(gbp_fee_revenue) FROM data_mart.money_flow"
     ).fetchone()
     edge_vol, edge_fee = con.execute(
         "SELECT SUM(gbp_volume), SUM(gbp_fee_revenue) FROM curated.edge"
@@ -182,14 +182,14 @@ def test_end_to_end_gbp_measures_conserved(con):
 
 
 @SKIP
-def test_curated_edge_is_lossless_projection_of_edge_fact(con):
-    """Gold: curated.edge is a 1:1 projection of edge_fact — equal rows and equal measures."""
-    assert _count(con, "curated.edge") == _count(con, "data_mart.edge_fact")
+def test_curated_edge_is_lossless_projection_of_money_flow(con):
+    """Gold: curated.edge is a 1:1 projection of money_flow — equal rows and equal measures."""
+    assert _count(con, "curated.edge") == _count(con, "data_mart.money_flow")
     e = con.execute(
         "SELECT SUM(gbp_volume), SUM(txn_count), SUM(gbp_fee_revenue) FROM curated.edge"
     ).fetchone()
     f = con.execute(
-        "SELECT SUM(gbp_volume), SUM(txn_count), SUM(gbp_fee_revenue) FROM data_mart.edge_fact"
+        "SELECT SUM(gbp_volume), SUM(txn_count), SUM(gbp_fee_revenue) FROM data_mart.money_flow"
     ).fetchone()
     assert e[1] == f[1]
     assert abs(e[0] - f[0]) < 1e-3 and abs(e[2] - f[2]) < 1e-3
