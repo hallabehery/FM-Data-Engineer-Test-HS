@@ -195,7 +195,7 @@ provenance — the additive base that year and all-period views roll up from.
 - [x] Each row carries a `source` provenance column
 - [x] Conservation: Σ(`gbp_volume`) reconciles to Σ(promoted GBP amounts) and Σ(`txn_count`) = promoted transaction rows — no join fan-out
 
-## Gold `curated` — network nodes
+## ~~Gold `curated` — network nodes~~ ✅ DONE (`feature/gold-curated-node`, #12)
 
 **What to build:** The node side of the final graph product: group nodes (circles) for counterparts
 that resolve to one of our groups, and standalone nodes (diamonds) for those that do not. Reads only
@@ -203,10 +203,10 @@ from `data_mart`.
 
 **Blocked by:** Gold `data_mart` — combined entity tables with provenance; Gold `data_mart` — directed edge fact with measures.
 
-- [ ] Every node participating in an edge is present exactly once
-- [ ] Group-resolved counterparts are typed as group (circle) nodes
-- [ ] Unaffiliated counterparts are typed as standalone (diamond) nodes
-- [ ] `curated` reads only from `data_mart`
+- [x] Every node participating in an edge is present exactly once
+- [x] Group-resolved counterparts are typed as group (circle) nodes
+- [x] Unaffiliated counterparts are typed as standalone (diamond) nodes
+- [x] `curated` reads only from `data_mart`
 
 ## Gold `curated` — directed edges, slicing & drill
 
