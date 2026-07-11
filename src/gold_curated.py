@@ -2,7 +2,7 @@
 
 `curated` is the presentation layer: it reads **only** from `data_mart` (never the
 reverse) and reshapes the modelled network into the two tables a graph library
-expects — `node` (this module) and `edge` (a later ticket).
+expects — `node` (`build_node`) and `edge` (`build_edge`).
 
 `build_node` lands `curated.node`: exactly one row per node that participates in an
 edge, typed by shape — **group nodes (circles)** for counterparts that resolve to one
@@ -12,6 +12,12 @@ participates if it appears on either end of a `data_mart.edge_fact` row (as a
 `data_mart.entity` dimension. Companies and group-resolved counterparties are *not*
 nodes — the drill level and resolved counterparts are represented by their group's
 circle — so they are excluded here (they carry no `node_shape` in `entity`).
+
+`build_edge` lands `curated.edge`: the directed money-flow edges a graph tool renders
+with no further transformation. Each edge carries directed endpoints, GBP volume,
+transaction count and GBP fee revenue, is sliceable by `month` and `year` (year rolls
+up from month by summation), and is drillable up/down the hierarchy via `focal_group_id`
+(roll up) and `focal_company_id` (drill down) — both grains summing from the same rows.
 """
 from __future__ import annotations
 
@@ -74,3 +80,70 @@ def build_node(con: duckdb.DuckDBPyConnection) -> StageReport:
     return report_stage(
         "gold.curated.node", rows_in=n_endpoints, rows_out=n_nodes, kept=n_nodes
     )
+
+
+def build_edge(con: duckdb.DuckDBPyConnection) -> StageReport:
+    """Build `curated.edge` — the directed money-flow edges. Idempotent.
+
+    Reads only from `data_mart.edge_fact`. A 1:1 projection of the fact (finest grain:
+    `focal_group × focal_company × counterpart × direction × month`) into the shape a graph
+    tool renders directly:
+
+    - **Directed endpoints** `source_node_id → target_node_id` at group grain (the ids in
+      `curated.node`): inflow = money into the focal group (`counterpart → focal_group`);
+      outflow = money out (`focal_group → counterpart`).
+    - **Measures** `gbp_volume`, `txn_count`, `gbp_fee_revenue` carried per edge.
+    - **Slicing** by `month` and `year` (year = calendar year of `month`; rolls up by
+      summation).
+    - **Drill** via `focal_group_id` (roll up) and `focal_company_id` (drill to the entity
+      that actually transacted) — the group view is the sum over its companies.
+
+    Raises if the projection loses/duplicates rows or if the measures do not reconcile to
+    `data_mart.edge_fact`.
+    """
+    con.execute(
+        """
+        CREATE OR REPLACE TABLE curated.edge AS
+        SELECT
+            -- Directed endpoints at group grain — both are ids present in curated.node.
+            IF(direction = 'inflow', counterpart_id, focal_group_id)  AS source_node_id,
+            IF(direction = 'inflow', focal_group_id, counterpart_id)  AS target_node_id,
+            direction,
+            -- Hierarchy: roll up on focal_group_id, drill down on focal_company_id.
+            focal_group_id,
+            focal_company_id,
+            counterpart_id,
+            counterpart_is_group,
+            -- Slicing: month is the additive base; year rolls up from it by summation.
+            month,
+            CAST(year(month) AS INTEGER)  AS year,
+            gbp_volume,
+            txn_count,
+            gbp_fee_revenue,
+            source
+        FROM data_mart.edge_fact
+        ORDER BY focal_group_id, focal_company_id, counterpart_id, direction, month
+        """
+    )
+
+    # Conservation: 1:1 projection — no row loss/fan-out, and measures reconcile to the fact.
+    n_fact = con.execute("SELECT COUNT(*) FROM data_mart.edge_fact").fetchone()[0]
+    n_edge = con.execute("SELECT COUNT(*) FROM curated.edge").fetchone()[0]
+    if n_edge != n_fact:
+        raise ValueError(
+            f"curated.edge: {n_edge} edges != {n_fact} data_mart.edge_fact rows "
+            "(projection lost or duplicated rows)"
+        )
+    e_vol, e_cnt, e_fee = con.execute(
+        "SELECT SUM(gbp_volume), SUM(txn_count), SUM(gbp_fee_revenue) FROM curated.edge"
+    ).fetchone()
+    f_vol, f_cnt, f_fee = con.execute(
+        "SELECT SUM(gbp_volume), SUM(txn_count), SUM(gbp_fee_revenue) FROM data_mart.edge_fact"
+    ).fetchone()
+    if e_cnt != f_cnt or abs(e_vol - f_vol) > 1e-3 or abs(e_fee - f_fee) > 1e-3:
+        raise ValueError(
+            "curated.edge measures do not reconcile to data_mart.edge_fact "
+            f"(vol {e_vol} vs {f_vol}, cnt {e_cnt} vs {f_cnt}, fee {e_fee} vs {f_fee})"
+        )
+
+    return report_stage("gold.curated.edge", rows_in=n_fact, rows_out=n_edge, kept=n_edge)

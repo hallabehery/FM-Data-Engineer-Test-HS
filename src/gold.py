@@ -89,10 +89,18 @@ def build_entity(con: duckdb.DuckDBPyConnection) -> StageReport:
 def build_edge_fact(con: duckdb.DuckDBPyConnection) -> StageReport:
     """Build `data_mart.edge_fact` — the directed money-flow edges. Idempotent.
 
-    Grain: `focal_group × counterpart × direction × month`, with additive measures
-    `gbp_volume`, `txn_count`, `gbp_fee_revenue`. Direction convention: **deposit = inflow**
-    (money into the focal group), **withdrawal = outflow**. The focal group is the
-    transacting company's parent group (`dc_id → company → group`); the counterpart is the
+    Grain: `focal_group × focal_company × counterpart × direction × month`, with additive
+    measures `gbp_volume`, `txn_count`, `gbp_fee_revenue`. The fact is stored at its
+    **finest (direct-company) grain**; the SPEC's `focal_group × counterpart × direction ×
+    month` view is the default roll-up (a strict refinement — summing over `focal_company`
+    reproduces it exactly). Keeping `focal_company_id` lets Gold `curated` attribute each
+    flow to the entity that actually transacted and drill up/down the group↔company
+    hierarchy (SPEC user story 9) — otherwise that detail is lost and unrecoverable
+    downstream, where `curated` reads only from `data_mart`.
+
+    Direction convention: **deposit = inflow** (money into the focal group), **withdrawal =
+    outflow**. The focal group is the transacting company's parent group
+    (`dc_id → company → group`); `focal_company_id` is that `dc_id`. The counterpart is the
     counterparty resolved to its group where possible (`data_mart.entity`), else the
     standalone counterparty itself. Fees attach to their transaction by
     `(link_id, fee_type)` — disambiguating the transaction IDs shared across the two streams.
@@ -120,6 +128,7 @@ def build_edge_fact(con: duckdb.DuckDBPyConnection) -> StageReport:
         resolved AS (
             SELECT t.direction, t.month, t.gbp_amount,
                    fc.group_id                                   AS focal_group_id,
+                   fc.entity_id                                  AS focal_company_id,
                    COALESCE(cpe.group_id, cpe.entity_id)         AS counterpart_id,
                    NOT cpe.is_standalone                         AS counterpart_is_group,
                    COALESCE(fr.fee_gbp, 0.0)                     AS fee_gbp
@@ -132,12 +141,14 @@ def build_edge_fact(con: duckdb.DuckDBPyConnection) -> StageReport:
                  ON fr.link_id = t.transaction_id AND fr.fee_type = t.txn_type
         ),
         agg AS (
-            SELECT focal_group_id, counterpart_id, counterpart_is_group, direction, month,
+            SELECT focal_group_id, focal_company_id, counterpart_id, counterpart_is_group,
+                   direction, month,
                    SUM(gbp_amount)  AS gbp_volume,
                    COUNT(*)         AS txn_count,
                    SUM(fee_gbp)     AS gbp_fee_revenue
             FROM resolved
-            GROUP BY focal_group_id, counterpart_id, counterpart_is_group, direction, month
+            GROUP BY focal_group_id, focal_company_id, counterpart_id, counterpart_is_group,
+                     direction, month
         )
         SELECT *,
                list_distinct(

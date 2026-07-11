@@ -28,8 +28,8 @@ fact. (This supersedes the earlier approach that put `fx_rate`/`fx_rate_id` on `
 | **silver.core** | dims: `company`, `corporate_group`, `counterparty`, `exchange_rate` | unpicked / cleaned reference data |
 | | FX match (bridge): `deposit_fx`, `withdrawal_fx`, `fee_fx` | as-of result per `live` fact: `key, fx_instant_ms, fx_rate_id, fx_rate, fx_quarantine_reason` |
 | **silver.shape** | `deposit`, `withdrawal`, `fee` (GBP-normalised) | fact ⨝ its `*_fx` → `gbp_amount`; unresolved quarantined; entity attributes resolved |
-| **gold.data_mart** | `entity` (+`source`), `edge_fact` (+`source`) | counterpart→group resolution; `focal_group × counterpart × direction × month` measures |
-| **gold.curated** | `node`, `edge` | final network product (circles/diamonds + directed edges); reads only from `data_mart` |
+| **gold.data_mart** | `entity` (+`source`), `edge_fact` (+`source`) | counterpart→group resolution; `focal_group × focal_company × counterpart × direction × month` measures (finest grain; group view rolls up) |
+| **gold.curated** | `node`, `edge` | final network product (circles/diamonds + directed edges, month/year sliceable, group↔company drillable); reads only from `data_mart` |
 
 Flow: `raw` → `live` (facts) → `core` (dims + FX match) → `shape` (apply FX → GBP) → `data_mart`
 (model/aggregate) → `curated` (nodes + edges).
@@ -208,18 +208,24 @@ from `data_mart`.
 - [x] Unaffiliated counterparts are typed as standalone (diamond) nodes
 - [x] `curated` reads only from `data_mart`
 
-## Gold `curated` — directed edges, slicing & drill
+## ~~Gold `curated` — directed edges, slicing & drill~~ ✅ DONE (`feature/gold-curated-edge`, #13)
 
 **What to build:** The edge side of the final product a graph tool can render with no further
 transformation: directed edges carrying GBP volume, count and fee revenue, sliceable by month and
 year and drillable up and down the group ↔ company hierarchy.
 
+> **Refines #11's edge fact.** To attribute a flow to the entity that actually transacted (SPEC user
+> story 9) and make edges drillable, `data_mart.edge_fact` now carries `focal_company_id` at its
+> finest grain (`focal_group × focal_company × counterpart × direction × month`). The SPEC's group
+> grain is the default roll-up — a strict refinement (summing over `focal_company` reproduces it
+> exactly); measure totals are unchanged.
+
 **Blocked by:** Gold `data_mart` — directed edge fact with measures; Gold `curated` — network nodes.
 
-- [ ] Directed edges carry GBP volume, transaction count, and GBP fee revenue
-- [ ] Output is sliceable by month and by year (year rolls up from month by summation)
-- [ ] Group-to-group flows between two of our own groups are visible
-- [ ] Edges are resolvable at direct-company grain so the hierarchy can expand/collapse
+- [x] Directed edges carry GBP volume, transaction count, and GBP fee revenue
+- [x] Output is sliceable by month and by year (year rolls up from month by summation)
+- [x] Group-to-group flows between two of our own groups are visible
+- [x] Edges are resolvable at direct-company grain so the hierarchy can expand/collapse
 
 ## Consolidated conservation test suite
 

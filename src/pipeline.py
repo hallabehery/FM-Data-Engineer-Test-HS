@@ -37,6 +37,7 @@ def main() -> None:
         gold.build_entity(con)
         gold.build_edge_fact(con)
         gold_curated.build_node(con)
+        gold_curated.build_edge(con)
     finally:
         con.close()
     logger.info("pipeline done")
