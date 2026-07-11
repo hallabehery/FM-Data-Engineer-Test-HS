@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import duckdb
 
-from . import bronze, config, fx, gold, silver_core, silver_shape, warehouse
+from . import bronze, config, fx, gold, gold_curated, silver_core, silver_shape, warehouse
 from .reporting import logger
 
 
@@ -36,6 +36,7 @@ def main() -> None:
         silver_shape.build_gbp_facts(con)
         gold.build_entity(con)
         gold.build_edge_fact(con)
+        gold_curated.build_node(con)
     finally:
         con.close()
     logger.info("pipeline done")
