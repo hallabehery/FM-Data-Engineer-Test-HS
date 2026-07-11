@@ -37,13 +37,22 @@ def test_grain_is_unique(con):
     dup = con.execute(
         """
         SELECT COUNT(*) FROM (
-            SELECT focal_group_id, counterpart_id, direction, month, COUNT(*) c
+            SELECT focal_group_id, focal_company_id, counterpart_id, direction, month, COUNT(*) c
             FROM data_mart.edge_fact
-            GROUP BY 1,2,3,4 HAVING COUNT(*) > 1
+            GROUP BY 1,2,3,4,5 HAVING COUNT(*) > 1
         )
         """
     ).fetchone()[0]
-    assert dup == 0  # one row per focal_group × counterpart × direction × month
+    # Finest grain: one row per focal_group × focal_company × counterpart × direction × month.
+    assert dup == 0
+    # focal_company_id rolls up to focal_group_id 1:1 (a company has exactly one parent group),
+    # so the SPEC's group-grain view is a clean summation over focal_company.
+    inconsistent = con.execute(
+        "SELECT COUNT(*) FROM ("
+        "SELECT focal_company_id FROM data_mart.edge_fact "
+        "GROUP BY focal_company_id HAVING COUNT(DISTINCT focal_group_id) > 1)"
+    ).fetchone()[0]
+    assert inconsistent == 0
 
 
 @SKIP

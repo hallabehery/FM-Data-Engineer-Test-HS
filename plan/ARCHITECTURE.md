@@ -53,8 +53,8 @@ columns on the fact.
 | **silver.core** | dims: `company`, `corporate_group`, `exchange_rate` | unpicked / cleaned reference data |
 | | FX match: `deposit_fx`, `withdrawal_fx`, `fee_fx` | as-of result per `live` fact: `key, fx_instant_ms, fx_rate_id, fx_rate, fx_quarantine_reason` |
 | **silver.shape** | `company`, `corporate_group` (attributes resolved); `deposit`, `withdrawal`, `fee` (GBP-normalised) | entity `attributes` flattened to columns; fact ⨝ its `*_fx` → `gbp_amount`, unresolved quarantined |
-| **gold.data_mart** | `entity` (+`source`), `edge_fact` (+`source`) | `entity` = groups + companies (Silver) + counterparties (`live`) with counterpart→group resolution + provenance; `edge_fact` = `focal_group × counterpart × direction × month` measures |
-| **gold.curated** | `node`, `edge` | final network product (circles/diamonds + directed edges); reads only from `data_mart` |
+| **gold.data_mart** | `entity` (+`source`), `edge_fact` (+`source`) | `entity` = groups + companies (Silver) + counterparties (`live`) with counterpart→group resolution + provenance; `edge_fact` = `focal_group × focal_company × counterpart × direction × month` measures (finest grain; group view is the roll-up) |
+| **gold.curated** | `node`, `edge` | final network product: `node` = circle/diamond nodes participating in edges; `edge` = directed `source→target` edges with GBP volume/count/fee, sliceable by month/year and drillable group↔company; reads only from `data_mart` |
 
 > `group` is a SQL reserved word, so the group dimension is named `corporate_group` (avoids pervasive quoting).
 
