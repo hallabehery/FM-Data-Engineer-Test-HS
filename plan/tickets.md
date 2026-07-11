@@ -181,7 +181,7 @@ is obvious on the row.
 - [x] Every row carries a `source` column listing all contributing sources
 - [x] Conservation: entity counts reconcile to distinct source groups/companies (the join adds no fan-out)
 
-## Gold `data_mart` — directed edge fact with measures
+## ~~Gold `data_mart` — directed edge fact with measures~~ ✅ DONE (`feature/gold-edge-fact`, #11)
 
 **What to build:** The core aggregated network fact: one row per focal group × counterpart ×
 direction × month, carrying additive GBP volume, transaction count, and GBP fee revenue, with source
@@ -189,11 +189,11 @@ provenance — the additive base that year and all-period views roll up from.
 
 **Blocked by:** Silver `shape` — FX applied → GBP normalisation; Gold `data_mart` — combined entity tables with provenance.
 
-- [ ] Grain is focal_group × counterpart × direction × month, one row each
-- [ ] Measures `gbp_volume`, `txn_count`, `gbp_fee_revenue` are additive and correct
-- [ ] Direction (deposit = inflow / withdrawal = outflow) is applied and documented
-- [ ] Each row carries a `source` provenance column
-- [ ] Conservation: Σ(`gbp_volume`) reconciles to Σ(promoted GBP amounts) and Σ(`txn_count`) = promoted transaction rows — no join fan-out
+- [x] Grain is focal_group × counterpart × direction × month, one row each
+- [x] Measures `gbp_volume`, `txn_count`, `gbp_fee_revenue` are additive and correct
+- [x] Direction (deposit = inflow / withdrawal = outflow) is applied and documented
+- [x] Each row carries a `source` provenance column
+- [x] Conservation: Σ(`gbp_volume`) reconciles to Σ(promoted GBP amounts) and Σ(`txn_count`) = promoted transaction rows — no join fan-out
 
 ## Gold `curated` — network nodes
 
