@@ -264,7 +264,11 @@ decision had a real alternative, the rejected one is noted.
 
 ## Assumptions
 
-- **Direction** (deposit = inflow, withdrawal = outflow) and the **FX settlement instant** (`Tx Date + Tx Time`; fees at their date) are inferred from the data and documented. **Timestamps are assumed UTC** — the source carries no timezone, so `Tx Date + Tx Time` (and the fee date at midnight) are taken as UTC instants for the FX as-of match. A different source timezone would shift which rate window an instant falls in only near a rate-point boundary; confirming the exchange's timezone convention would close this.
+- **Direction** (deposit = inflow, withdrawal = outflow) and the **FX settlement instant** (`Tx Date + Tx Time`; fees at their date) are inferred from the data and documented. 
+
+- **Timestamps are assumed UTC.** The source carries no timezone, so `Tx Date + Tx Time` (and the
+  fee date at midnight) are taken as UTC instants for the FX as-of match; confirming the source
+  system's timezone convention with the data-team lead would close this assumption.
 
 - **The reference snapshot is illustrative, not a golden target.** `docs/star_map_snapshot.png` is
   from a different data drop, so its figures aren't reproducible here and aren't used as a test; it's a
