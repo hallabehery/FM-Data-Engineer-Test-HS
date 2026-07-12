@@ -162,27 +162,38 @@ survive Bronze → Silver → Gold uncounted-out and land as `curated.edge` `txn
 volume/fee totals are unchanged from Silver through to `curated`. If any invariant breaks, `make
 test` goes red.
 
-## If the source were a live-stream
+## Running it live — what would actually change
 
-Today the workbook is loaded per-month in batch. If deposits and withdrawals instead arrived as a
-**live-stream**, the medallion shape wouldn't change — only *how rows enter Bronze* and *batch vs
-incremental* would. The plan:
+Today the pipeline is pure batch: `python -m src.pipeline` reads the whole workbook and rebuilds
+every table (`CREATE OR REPLACE`) in one pass. If deposits and withdrawals arrived as a
+**live-stream** instead, most of that is untouched — the changes are concentrated at the two ends:
+how rows get *in*, and how much gets *rebuilt*.
 
-- **Land append-only** into Bronze `raw`, partitioned by event month (the grain we already use),
-  raw and immutable. Dedupe on the natural key (`transaction_id` + stream) so at-least-once delivery
-  and replays don't double-count.
-- **Validate at the edge** with the same fail-loud column check, so a producer dropping a field
-  errors on arrival instead of corrupting a downstream layer.
-- **Match FX on arrival** using the same pure unit, with `FxRates` cached in memory. Events whose
-  instant has no rate yet are quarantined with the *same* reasons and re-evaluated when coverage
-  catches up — never blocking the stream.
-- **Upsert Gold incrementally.** `money_flow` is additive on its grain, so a micro-batch is an upsert
-  into the affected month's aggregate; `curated` stays a thin refresh off `data_mart`.
-- **Tolerate late data** with a short per-month revision window, treating corrections as new events
-  rather than in-place edits.
+**What stays exactly the same:** the FX as-of unit (`src/fx.py`), the JSON dimension unpicking, the
+network model (`entity` → `money_flow` → `curated`), the quarantine rules, and the conservation
+checks. The current design is built so the transformation logic doesn't care whether a row came
+from a sheet or a stream — facts live once and every step is idempotent.
 
-This works precisely because the facts already live once and every step is idempotent — batch and
-stream share the same transformation code.
+**What we'd change — four concrete things:**
+
+1. **Swap the ingestion source.** `bronze.build_raw_monthly` reads an Excel sheet today; replace
+   that one function with a stream consumer (Kafka / Kinesis / webhook) that appends incoming events
+   to the Bronze `raw` month partition. Nothing downstream of `live` needs to know.
+2. **Make Bronze writes append-only and idempotent.** Bronze currently does `CREATE OR REPLACE`
+   (full rebuild); live, it becomes `INSERT … ON CONFLICT DO NOTHING` keyed on the natural key
+   (`transaction_id` + stream, `fee_id`), so at-least-once delivery and replays can't double-count.
+3. **Process incrementally instead of rebuilding.** Track a watermark (last offset / timestamp) and
+   run FX-match → GBP → aggregate for only the new rows. Gold `money_flow` is additive on its grain,
+   so a micro-batch is an **upsert into the affected month's aggregate** rather than a full
+   `GROUP BY`; `curated` stays a thin refresh off `data_mart`.
+4. **Refresh FX as a live dimension.** `FxRates.load()` reads the file once; live, keep the lookup in
+   memory and refresh the rate series on a schedule. A late-arriving rate point then re-prices rows
+   previously quarantined as `fx_no_rate_point`, so nothing stays stuck.
+
+Two supporting pieces: an **orchestrator** to replace the single script — a timer-driven micro-batch
+or a streaming runtime (Airflow / Dagster, or a stream engine) — and a short **late-data window** so
+a correction arriving after month-end revises that month's aggregate (corrections are new events,
+never in-place edits to Bronze).
 
 ## Does it deliver the network?
 
@@ -198,6 +209,46 @@ clause away — nothing needs reshaping.
 
 `make render` proves it: it reads only `curated.node` + `curated.edge`, hands them straight to pyvis,
 and produces [`star_map.html`](star_map.html) with no transformation in between.
+
+## Key decisions
+
+The load-bearing choices and why we made them (fuller detail in the sections above); where a
+decision had a real alternative, the rejected one is noted.
+
+- **One catalog, six schemas — not a catalog per layer.** A DuckDB catalog is a physical file, so
+  the Databricks "catalog = bronze/silver/gold" idiom would need three attached files and break the
+  single-file rule. The layers map to schemas instead.
+- **`raw` faithful to source; conform names in `live`.** Renaming columns is a cleaning step, so
+  `raw` stays a byte-faithful mirror (`SELECT *`, source names) and the `snake_case` map is applied
+  at the `raw → live` consolidation. *Rejected:* renaming at `raw` landing (breaks the mirror and
+  silently drops any unmapped column) and renaming in Silver (fights "facts live once in `live`").
+- **Keep the raw fact pure — attach FX, don't bolt it on.** Silver `core` holds FX as a separate
+  table keyed to the `live` fact rather than adding `fx_*` columns to the fact. This splits "which
+  rate" (`core`) from "apply the rate" (`shape`) into two inspectable failure modes and keeps
+  lineage back to an untouched source row.
+- **Facts live once; later layers reference them.** The transaction/fee facts aren't copied into
+  `core`; `shape` materialises cleaned GBP facts and Gold aggregates them — ordinary per-layer
+  materialisation, but the raw fact is never mutated in place.
+- **FX as an isolated, pure unit.** The as-of conversion `(currency, instant) → rate | reason` lives
+  in one tested module that needs neither DuckDB nor the file — it's the highest-risk logic, so it
+  earns its own seam.
+- **Quarantine, never silently mis-price — and quarantine is terminal.** Unpriceable rows are kept
+  aside in Silver `shape.*_quarantine` with a reason; Gold reads only the promoted facts, so no
+  wrong or null number reaches the network product.
+- **DQ handling belongs in Silver, not Gold.** Detecting and quarantining is Silver's job; Gold
+  holds only trustworthy, cleaned data. *Considered and deferred:* a Gold DQ *reporting* view to
+  serve the steward's "auditable" story as a product.
+- **Enforce fact integrity, don't just assume it.** `validate_facts` fails the build on a duplicate
+  business key, and a null amount is quarantined — both no-ops on this drop, but they mean the facts
+  are clean *because the build won't let them not be*, protecting the next data drop.
+- **Money-flow stored at the finest (company) grain.** The group view is the roll-up; keeping
+  `focal_company_id` is what makes the hierarchy drill-down recoverable, since `curated` reads only
+  from `data_mart`.
+- **`curated` reads only from `data_mart`.** The final nodes/edges product has a single clean
+  upstream and is a pure projection, so a graph tool renders it with no further shaping.
+- **Counterpart → group resolution uses a deterministic key** (`group_id`, else `dc_id → company →
+  group`). Profiling found zero orphans, so no fragile name-matching — counterparties with no key
+  are standalone diamonds by design, not errors.
 
 ## Assumptions and what would need a question
 
