@@ -2,15 +2,17 @@
 _internal/
 
 # --- DuckDB warehouse ---
-# The populated submission/warehouse.duckdb IS committed, per SETUP.md §8 ("hand back the
-# populated warehouse — commit it or zip the lot"). It's a build output (`make pipeline`),
-# never hand-edited. Only the write-ahead log stays ignored.
-warehouse.duckdb.wal
+# The populated submission/warehouse.duckdb IS committed — SETUP.md §8 asks for the populated
+# warehouse to be handed back (committed or zipped). It's a build output (`make pipeline`),
+# never hand-edited. Every other .duckdb stays ignored (e.g. a stray root-level warehouse
+# from running the SETUP examples), as do write-ahead logs.
+*.duckdb
 *.duckdb.wal
+!submission/warehouse.duckdb
 
-# Note: submission/star_map.html IS committed — it's a small (~700 KB), self-contained
+# Note: submission/star_map.html IS also committed — a small (~700 KB), self-contained
 # illustrative deliverable a reviewer can open straight from the repo (regenerate with
-# `make render`). Unlike the multi-MB warehouse binary above, it's worth versioning.
+# `make render`).
 
 # --- Python ---
 .venv/
