@@ -1,18 +1,16 @@
-# Freemarket Relationship-Network — Write-up
+# Freemarket Relationship-Network Write-up
 
-This is the record that lets you trust the pipeline without reading all the code: how it's
-laid out, where each transformation lives and why, how FX and data-quality edge cases were
-handled, and how the Gold output drives the money-flow network. Companion docs:
+This document includes how the pipeline is laid out, where each transformation lives and why, how FX and data-quality edge cases were handled, and how the Gold output drives the money-flow network. Companion docs:
 [`plan/ARCHITECTURE.md`](../plan/ARCHITECTURE.md) (topology/data-flow) and
 [`docs/build_protocol.md`](../docs/build_protocol.md) (the data team's build order).
 
 ## What it is, and how to run it
 
-A Bronze → Silver → Gold pipeline in a single DuckDB file that ingests four raw sources (a
-4-sheet Excel workbook and three nested JSON files), converts every amount to GBP at the rate
-effective at its own instant, and lands a **directed money-flow network** — groups and their
-counterparts as nodes, directed edges carrying GBP volume, transaction count and fee revenue,
-sliceable by month/year and drillable down the group → company hierarchy.
+It's a Bronze → Silver → Gold pipeline in a single DuckDB file. It ingests four raw sources — a
+4-sheet Excel workbook and three nested JSON files — and converts every amount to GBP at the rate
+effective at its own instant. The output is a **directed money-flow network**: groups and their
+counterparts as nodes, and directed edges carrying GBP volume, transaction count and fee revenue.
+The whole network slices by month/year and drills down the group → company hierarchy.
 
 ```bash
 make install     # pinned deps into a venv
