@@ -252,10 +252,18 @@ measure spine (Silver → `money_flow` → `curated.edge`), and the quarantine l
 exist in this data, so it cannot serve as a golden reconciliation target (confirmed in #15). The
 snapshot is treated as illustrative of *shape* only (node types, edge direction, label format),
 not of numbers, and this is recorded as the one open stakeholder question in
-`submission/WRITEUP.md` § Assumptions. The originally planned check below is therefore
-unfulfillable, not undone work.
+`submission/WRITEUP.md` § Assumptions. The originally planned check below is kept for the record;
+it is unfulfillable, not undone work.
 
-**Blocked by:** Gold `curated` — directed edges, slicing & drill.
+**What to build:** ~~A check that the final `curated` nodes/edges for a known focal group and period
+reproduce the figures in `star_map_snapshot.png` — the single highest-value seam, pending confirmation
+from the data-team lead that those figures are a validated golden reference.~~
+
+**Blocked by:** ~~Gold `curated` — directed edges, slicing & drill~~ (moot — ticket closed).
+
+- ~~A focal group + period is reconciled against the snapshot's named-edge figures~~
+- ~~Volume and transaction count match for at least one named edge (within a documented tolerance)~~
+- ~~Any dependency on unconfirmed "golden" status is stated explicitly~~
 
 ## ~~Illustrative network render (optional proof)~~ ✅ DONE (`feature/illustrative-render`, #16)
 
