@@ -3,7 +3,7 @@
 A gentle, example-led walk through what the data *means*, the group → company → counterparty
 **hierarchy**, the columns in the final `curated.edge` table, and what the drill notebook
 ([`notebooks/drill.ipynb`](../notebooks/drill.ipynb)) is actually showing. Every example is a real row
-from the built warehouse. For the design/engineering rationale, see [`WRITEUP.md`](WRITEUP.md).
+from the built warehouse. For the design/engineering rationale, see [`WRITEUP.md`](../submission/WRITEUP.md).
 
 ---
 
