@@ -2,7 +2,7 @@
 
 A gentle, example-led walk through what the data *means*, the group → company → counterparty
 **hierarchy**, the columns in the final `curated.edge` table, and what the drill notebook
-([`notebook/drill.ipynb`](../notebook/drill.ipynb)) is actually showing. Every example is a real row
+([`notebooks/drill.ipynb`](../notebooks/drill.ipynb)) is actually showing. Every example is a real row
 from the built warehouse. For the design/engineering rationale, see [`WRITEUP.md`](WRITEUP.md).
 
 ---
@@ -89,7 +89,7 @@ fees."*
 
 ## 4. What the drill notebook is actually showing
 
-[`notebook/drill.ipynb`](../notebook/drill.ipynb) centres on Koba2Maya and walks the hierarchy. Each
+[`notebooks/drill.ipynb`](../notebooks/drill.ipynb) centres on Koba2Maya and walks the hierarchy. Each
 cell answers one plain question:
 
 1. **Group grain (the star-map view)** — combine *all* of Koba2Maya's companies and show money

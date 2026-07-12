@@ -170,7 +170,7 @@ conservation properties), not the internal SQL. Proposed seams, highest first:
    Bronze → Silver → Gold; quarantined rows accounted for = input − promoted. Catches
    join fan-out and silent drops — the classic pipeline failure.
 
-Prior art: none in-repo (greenfield); tests live alongside the notebook/`src` helpers as
+Prior art: none in-repo (greenfield); tests live alongside the notebook and `src` helpers as
 assertion cells / lightweight `assert` checks reconciled at each layer.
 
 ## Engineering Standards (non-functional)
