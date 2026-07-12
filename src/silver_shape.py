@@ -79,6 +79,40 @@ _GBP_FACTS = [
     ("fee", "fee_id", "fee_amount_ccy"),
 ]
 
+# Row-level quarantine reason owned by `shape` (FX reasons come from `core`/`fx`). A NULL
+# native amount can't be priced (`amount × rate` would be a silent NULL), so it is quarantined
+# rather than promoted — the same policy as an unpriceable currency.
+REASON_MISSING_AMOUNT = "amount_missing"
+
+
+def validate_facts(con: duckdb.DuckDBPyConnection) -> list[StageReport]:
+    """Assert each fact stream's business key is unique before FX is applied. Fail loud.
+
+    A duplicate `transaction_id` / `fee_id` within a stream would silently inflate GBP volume
+    and transaction count downstream — and, via the fee `(link_id, fee_type)` join, fan out fee
+    revenue — so a duplicate key is a hard integrity error, not a priceable-or-not question.
+    (`transaction_id` is legitimately reused *across* the deposit and withdrawal streams, so
+    uniqueness is checked *within* each stream only.) Currency, coverage-window and column-shape
+    problems are already owned by the FX unit and Bronze; this guards the one integrity property
+    the pipeline would otherwise merely assume. Raises `ValueError` on the first violation.
+    """
+    reports: list[StageReport] = []
+    for stream, key, _amount in _GBP_FACTS:
+        n = con.execute(f"SELECT COUNT(*) FROM live.{stream}").fetchone()[0]
+        dups = con.execute(
+            f"SELECT COUNT(*) FROM (SELECT {key} FROM live.{stream} "
+            f"GROUP BY {key} HAVING COUNT(*) > 1)"
+        ).fetchone()[0]
+        if dups:
+            raise ValueError(
+                f"live.{stream}: {dups} duplicate {key} value(s) — a unique fact key is required "
+                "(duplicates would inflate volume/count and fan out fee revenue)"
+            )
+        reports.append(
+            report_stage(f"silver.shape.{stream}.validate", rows_in=n, rows_out=n, kept=n)
+        )
+    return reports
+
 
 def _apply_fx(
     con: duckdb.DuckDBPyConnection, stream: str, key_col: str, amount_col: str
@@ -86,21 +120,26 @@ def _apply_fx(
     """Join a `live` fact to its `core.*_fx` match, compute GBP, split promoted/quarantined.
 
     Priced rows land in `shape.<stream>` with `gbp_amount = <amount> × fx_rate` (plus
-    `fx_rate`/`fx_rate_id` for lineage). Rows whose match carries a
-    `fx_quarantine_reason` are routed to `shape.<stream>_quarantine` (not priced), so no
-    wrong number reaches Gold.
+    `fx_rate`/`fx_rate_id` for lineage). Rows the pipeline can't trust to price — the FX match
+    carries a reason, or the native amount is NULL — are routed to `shape.<stream>_quarantine`
+    (not priced) carrying a single `quarantine_reason`, so no wrong or NULL number reaches Gold.
     """
     fact, match = f"live.{stream}", f"core.{stream}_fx"
     promoted, quarantine = f"shape.{stream}", f"shape.{stream}_quarantine"
 
-    # Join the fact to its match once, then split priced vs quarantined from the shared
-    # result. The join is inner: the 1:1 match invariant is asserted upstream in
-    # `silver_core._match_fx`, and the conservation guard below would raise if any fact
-    # row failed to match (it would appear in neither output).
+    # Join the fact to its match once, then split priced vs quarantined from the shared result.
+    # `quarantine_reason` unifies the FX reason with `shape`'s own amount check (FX takes
+    # precedence). The join is inner: the 1:1 match invariant is asserted upstream in
+    # `silver_core._match_fx`, and the conservation guard below would raise if any fact row
+    # failed to match (it would appear in neither output).
     con.execute(
         f"""
         CREATE OR REPLACE TEMP TABLE _shape_join AS
-        SELECT f.*, m.fx_rate_id, m.fx_rate, m.fx_quarantine_reason
+        SELECT f.*, m.fx_rate_id, m.fx_rate,
+               COALESCE(
+                   CAST(m.fx_quarantine_reason AS VARCHAR),
+                   CASE WHEN f.{amount_col} IS NULL THEN '{REASON_MISSING_AMOUNT}' END
+               ) AS quarantine_reason
         FROM {fact} f
         JOIN {match} m ON f.{key_col} = m.{key_col}
         """
@@ -108,9 +147,9 @@ def _apply_fx(
     con.execute(
         f"""
         CREATE OR REPLACE TABLE {promoted} AS
-        SELECT * EXCLUDE (fx_quarantine_reason), ({amount_col} * fx_rate) AS gbp_amount
+        SELECT * EXCLUDE (quarantine_reason), ({amount_col} * fx_rate) AS gbp_amount
         FROM _shape_join
-        WHERE fx_quarantine_reason IS NULL
+        WHERE quarantine_reason IS NULL
         """
     )
     con.execute(
@@ -118,7 +157,7 @@ def _apply_fx(
         CREATE OR REPLACE TABLE {quarantine} AS
         SELECT * EXCLUDE (fx_rate_id, fx_rate)
         FROM _shape_join
-        WHERE fx_quarantine_reason IS NOT NULL
+        WHERE quarantine_reason IS NOT NULL
         """
     )
     con.execute("DROP TABLE _shape_join")
@@ -140,5 +179,11 @@ def _apply_fx(
 
 
 def build_gbp_facts(con: duckdb.DuckDBPyConnection) -> list[StageReport]:
-    """Apply FX to each fact → GBP-normalised `shape.<stream>` (+ quarantine). Idempotent."""
+    """Validate the facts, then apply FX to each → GBP-normalised `shape.<stream>` (+ quarantine).
+
+    Idempotent. Fact integrity is asserted first (`validate_facts` — unique business key): a
+    duplicate key would inflate volume/count and fan out fees, so the build fails loud before it
+    prices anything.
+    """
+    validate_facts(con)
     return [_apply_fx(con, stream, key, amount) for stream, key, amount in _GBP_FACTS]

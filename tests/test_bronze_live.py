@@ -37,12 +37,16 @@ def test_live_consolidates_all_months_conserved(con):
 
 
 @SKIP
-def test_columns_aligned_by_name(con):
+def test_live_conforms_names_and_aligns_streams(con):
     bronze.build_live(con)
-    # Consolidated table carries exactly the month table's columns (BY NAME union).
+    # Consolidation conforms source names to snake_case (raw stays source-named)...
     live_cols = {r[0] for r in con.execute("DESCRIBE live.deposit").fetchall()}
-    month_cols = {r[0] for r in con.execute("DESCRIBE raw.deposit_2025_07").fetchall()}
-    assert live_cols == month_cols
+    assert live_cols == set(naming.TRANSACTION_COLUMNS.values())
+    raw_cols = {r[0] for r in con.execute("DESCRIBE raw.deposit_2025_07").fetchall()}
+    assert live_cols != raw_cols  # raw kept source names; live conformed them
+    # ...and deposit/withdrawal (which differ in source column order) align by name.
+    wd_cols = {r[0] for r in con.execute("DESCRIBE live.withdrawal").fetchall()}
+    assert live_cols == wd_cols
 
 
 @SKIP

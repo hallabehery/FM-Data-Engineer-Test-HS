@@ -54,7 +54,7 @@ columns on the fact.
 | | FX match: `deposit_fx`, `withdrawal_fx`, `fee_fx` | as-of result per `live` fact: `key, fx_instant_ms, fx_rate_id, fx_rate, fx_quarantine_reason` |
 | **silver.shape** | `company`, `corporate_group` (attributes resolved); `deposit`, `withdrawal`, `fee` (GBP-normalised) | entity `attributes` flattened to columns; fact ⨝ its `*_fx` → `gbp_amount`, unresolved quarantined |
 | **gold.data_mart** | `entity` (+`source`), `money_flow` (+`source`) | `entity` = groups + companies (Silver) + counterparties (`live`) with counterpart→group resolution + provenance; `money_flow` = `focal_group × focal_company × counterpart × direction × month` measures (finest grain; group view is the roll-up) |
-| **gold.curated** | `node`, `edge` | final network product: `node` = circle/diamond nodes participating in edges; `edge` = directed `source→target` edges with GBP volume/count/fee, sliceable by month/year and drillable group↔company; reads only from `data_mart` |
+| **gold.curated** | `node`, `edge` | final network product: `node` = circle/diamond nodes participating in edges; `edge` = directed `source→target` edges with GBP volume/count/fee, sliceable by month/year and drillable group↔company (carries `focal_company_name` beside `focal_company_id` so the drill renders without a dimension join); reads only from `data_mart` |
 
 > `group` is a SQL reserved word, so the group dimension is named `corporate_group` (avoids pervasive quoting).
 
@@ -119,9 +119,10 @@ Excel Fees ───────────────────────
 
 - **Tables:** singular, `snake_case` (`deposit`, not `Deposits`).
 - **Columns:** `lower_snake_case`, no spaces/slashes/parentheses (`tx_value_ccy`, not `"Tx Value (CCY)"`).
-- One canonical rename map (`src/naming.py`), applied at Bronze landing; raw **values/types**
-  preserved, only names conformed. (This deviates from `build_protocol.md`'s literal plural table
-  names — an intentional, documented cleanup.)
+- One canonical rename map (`src/naming.py`), applied when consolidating Bronze `raw` → `live`
+  (conforming names is a cleaning step, so `raw` stays source-faithful and `live` onward is
+  `snake_case`); raw **values/types** preserved, only names conformed. (This deviates from
+  `build_protocol.md`'s literal plural table names — an intentional, documented cleanup.)
 
 ## 9. Engineering standards (summary)
 

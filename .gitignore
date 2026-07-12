@@ -8,8 +8,9 @@ warehouse.duckdb.wal
 *.duckdb
 *.duckdb.wal
 
-# --- Illustrative render (build output — regenerate with `make render`) ---
-submission/star_map.html
+# Note: submission/star_map.html IS committed — it's a small (~700 KB), self-contained
+# illustrative deliverable a reviewer can open straight from the repo (regenerate with
+# `make render`). Unlike the multi-MB warehouse binary above, it's worth versioning.
 
 # --- Python ---
 .venv/

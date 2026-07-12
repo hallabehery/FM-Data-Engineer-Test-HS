@@ -85,9 +85,9 @@ def build_node(con: duckdb.DuckDBPyConnection) -> StageReport:
 def build_edge(con: duckdb.DuckDBPyConnection) -> StageReport:
     """Build `curated.edge` — the directed money-flow edges. Idempotent.
 
-    Reads only from `data_mart.money_flow`. A 1:1 projection of the fact (finest grain:
-    `focal_group × focal_company × counterpart × direction × month`) into the shape a graph
-    tool renders directly:
+    Reads only from `data_mart` (`money_flow` for the fact, `entity` for the drill label). A 1:1
+    projection of the fact (finest grain: `focal_group × focal_company × counterpart × direction ×
+    month`) into the shape a graph tool renders directly:
 
     - **Directed endpoints** `source_node_id → target_node_id` at group grain (the ids in
       `curated.node`): inflow = money into the focal group (`counterpart → focal_group`);
@@ -96,33 +96,39 @@ def build_edge(con: duckdb.DuckDBPyConnection) -> StageReport:
     - **Slicing** by `month` and `year` (year = calendar year of `month`; rolls up by
       summation).
     - **Drill** via `focal_group_id` (roll up) and `focal_company_id` (drill to the entity
-      that actually transacted) — the group view is the sum over its companies.
+      that actually transacted) — the group view is the sum over its companies. The company's
+      display name is carried alongside the key as `focal_company_name`, so a consumer can render
+      the drill straight from `curated` without joining back to the `entity` dimension.
 
-    Raises if the projection loses/duplicates rows or if the measures do not reconcile to
-    `data_mart.money_flow`.
+    Raises if the projection loses/duplicates rows, if any company key fails to resolve to a name,
+    or if the measures do not reconcile to `data_mart.money_flow`.
     """
     con.execute(
         """
         CREATE OR REPLACE TABLE curated.edge AS
         SELECT
             -- Directed endpoints at group grain — both are ids present in curated.node.
-            IF(direction = 'inflow', counterpart_id, focal_group_id)  AS source_node_id,
-            IF(direction = 'inflow', focal_group_id, counterpart_id)  AS target_node_id,
-            direction,
-            -- Hierarchy: roll up on focal_group_id, drill down on focal_company_id.
-            focal_group_id,
-            focal_company_id,
-            counterpart_id,
-            counterpart_is_group,
+            IF(mf.direction = 'inflow', mf.counterpart_id, mf.focal_group_id)  AS source_node_id,
+            IF(mf.direction = 'inflow', mf.focal_group_id, mf.counterpart_id)  AS target_node_id,
+            mf.direction,
+            -- Hierarchy: roll up on focal_group_id, drill down on focal_company_id (+ its name).
+            mf.focal_group_id,
+            mf.focal_company_id,
+            fc.name                          AS focal_company_name,
+            mf.counterpart_id,
+            mf.counterpart_is_group,
             -- Slicing: month is the additive base; year rolls up from it by summation.
-            month,
-            CAST(year(month) AS INTEGER)  AS year,
-            gbp_volume,
-            txn_count,
-            gbp_fee_revenue,
-            source
-        FROM data_mart.money_flow
-        ORDER BY focal_group_id, focal_company_id, counterpart_id, direction, month
+            mf.month,
+            CAST(year(mf.month) AS INTEGER)  AS year,
+            mf.gbp_volume,
+            mf.txn_count,
+            mf.gbp_fee_revenue,
+            mf.source
+        FROM data_mart.money_flow mf
+        -- Drill label: each focal_company_id resolves to exactly one company (1:1, no fan-out).
+        LEFT JOIN data_mart.entity fc
+             ON fc.entity_kind = 'company' AND fc.entity_id = mf.focal_company_id
+        ORDER BY mf.focal_group_id, mf.focal_company_id, mf.counterpart_id, mf.direction, mf.month
         """
     )
 
@@ -133,6 +139,15 @@ def build_edge(con: duckdb.DuckDBPyConnection) -> StageReport:
         raise ValueError(
             f"curated.edge: {n_edge} edges != {n_fact} data_mart.money_flow rows "
             "(projection lost or duplicated rows)"
+        )
+    # Integrity: the drill label must always resolve — no company key left without a name.
+    unnamed = con.execute(
+        "SELECT COUNT(*) FROM curated.edge WHERE focal_company_name IS NULL"
+    ).fetchone()[0]
+    if unnamed:
+        raise ValueError(
+            f"curated.edge: {unnamed} rows have no focal_company_name "
+            "(a focal_company_id did not resolve to a company in data_mart.entity)"
         )
     e_vol, e_cnt, e_fee = con.execute(
         "SELECT SUM(gbp_volume), SUM(txn_count), SUM(gbp_fee_revenue) FROM curated.edge"

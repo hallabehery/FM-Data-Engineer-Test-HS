@@ -63,6 +63,29 @@ def default_focal_group(con: duckdb.DuckDBPyConnection) -> str:
     return row[0]
 
 
+def most_group_connected_focal_group(
+    con: duckdb.DuckDBPyConnection, *, top_n: int | None = DEFAULT_TOP_N
+) -> str:
+    """Return the focal group whose top-N view shows the most *group* counterparts (circle↔circle).
+
+    The top-by-volume default can be dominated by a few huge standalone flows, hiding the
+    group-to-group structure. This picks a focal group where other groups actually appear within the
+    capped view — so the illustrative render shows circles connected to circles, not only diamonds.
+    Ties broken by total volume.
+    """
+    best_key: tuple[int, float] | None = None
+    best_fg: str | None = None
+    for (fg,) in con.execute("SELECT DISTINCT focal_group_id FROM curated.edge").fetchall():
+        nodes, edges = star_map_frame(con, fg, top_n=top_n)
+        circles = sum(1 for n in nodes if n["node_shape"] == "circle" and not n["is_focal"])
+        key = (circles, sum(e["gbp_volume"] for e in edges))
+        if best_key is None or key > best_key:
+            best_key, best_fg = key, fg
+    if best_fg is None:
+        raise ValueError("curated.edge is empty — build the pipeline before rendering")
+    return best_fg
+
+
 def _normalise_month(month: str | date | None) -> str | None:
     """Normalise a month slice to a first-of-month `YYYY-MM-01` string (or None)."""
     if month is None:
@@ -131,6 +154,27 @@ def star_map_frame(
         keep = {cp for cp, _ in sorted(vol_by_cp.items(), key=lambda kv: kv[1], reverse=True)[:top_n]}
         edges = [e for e in edges if e["counterpart_id"] in keep]
 
+    # Drill level: the focal group's constituent direct companies that transacted in this slice
+    # (`focal_company_id`), summed from curated.edge — still curated-only. Attached to the focal
+    # node so a tooltip can reveal the hierarchy the group rolls up (SPEC drill-down, made visible).
+    company_rows = con.execute(
+        f"""
+        SELECT focal_company_id,
+               ANY_VALUE(focal_company_name) AS focal_company_name,
+               SUM(gbp_volume) AS gbp_volume,
+               SUM(txn_count)  AS txn_count
+        FROM curated.edge
+        WHERE {predicate}
+        GROUP BY focal_company_id
+        ORDER BY gbp_volume DESC
+        """,
+        params,
+    ).fetchall()
+    companies = [
+        {"focal_company_id": cid, "focal_company_name": name, "gbp_volume": vol, "txn_count": cnt}
+        for cid, name, vol, cnt in company_rows
+    ]
+
     # Nodes = every id on either end of a kept edge, attributes taken verbatim from curated.node.
     node_ids = {focal_group_id}
     for e in edges:
@@ -146,6 +190,8 @@ def star_map_frame(
         {
             "node_id": nid, "name": name, "node_kind": kind, "node_shape": shape,
             "is_standalone": standalone, "is_focal": nid == focal_group_id,
+            # Only the focal group has a drill level here; counterparts carry no sub-entities.
+            "companies": companies if nid == focal_group_id else None,
         }
         for nid, name, kind, shape, standalone in node_rows
     ]
@@ -158,6 +204,52 @@ def _edge_label(edge: dict[str, Any]) -> str:
         f"£{edge['gbp_volume']:,.0f} · {int(edge['txn_count'])} txns · "
         f"£{edge['gbp_fee_revenue']:,.0f} fee"
     )
+
+
+def _node_title(node: dict[str, Any], edges: list[dict[str, Any]]) -> str:
+    """Build the hover tooltip (HTML) for a node, revealing the drill level where there is one.
+
+    The focal group's tooltip lists its constituent direct companies (the drill level, from
+    `curated.edge.focal_company_id`) with their GBP split; a counterpart's shows its flow with the
+    focal group and — for a standalone diamond — that it is a leaf with no sub-entities.
+    """
+    # This vis-network build renders node titles as plain text, so the tooltip uses newlines (not
+    # HTML <br>); render_star_map injects a `white-space: pre-line` rule so the lines break.
+    name = node["name"] or node["node_id"]
+    if node["is_focal"]:
+        inflow = sum(e["gbp_volume"] for e in edges if e["direction"] == "inflow")
+        outflow = sum(e["gbp_volume"] for e in edges if e["direction"] == "outflow")
+        companies = node.get("companies") or []
+        noun = "company" if len(companies) == 1 else "companies"
+        lines = [
+            f"{name} — focal group",
+            f"Inflow £{inflow:,.0f} · Outflow £{outflow:,.0f}",
+            f"Drill level — {len(companies)} direct {noun} transacted:",
+        ]
+        lines += [
+            f"• {c['focal_company_name'] or c['focal_company_id']}: "
+            f"£{c['gbp_volume']:,.0f} ({int(c['txn_count'])} txns)"
+            for c in companies[:5]
+        ]
+        if len(companies) > 5:
+            lines.append(f"• +{len(companies) - 5} more")
+        return "\n".join(lines)
+
+    cid = node["node_id"]
+    mine = [e for e in edges if e["counterpart_id"] == cid]
+    inflow = sum(e["gbp_volume"] for e in mine if e["direction"] == "inflow")
+    outflow = sum(e["gbp_volume"] for e in mine if e["direction"] == "outflow")
+    txns = sum(int(e["txn_count"]) for e in mine)
+    fee = sum(e["gbp_fee_revenue"] for e in mine)
+    kind = (
+        "group counterpart" if node["node_shape"] == "circle"
+        else "standalone counterpart (leaf — no sub-entities)"
+    )
+    return "\n".join([
+        f"{name} — {kind}",
+        f"Inflow £{inflow:,.0f} · Outflow £{outflow:,.0f}",
+        f"{txns} txns · £{fee:,.0f} fee",
+    ])
 
 
 def render_star_map(
@@ -173,9 +265,10 @@ def render_star_map(
     """Render one focal group's money-flow network to a self-contained HTML file.
 
     Circles are groups, diamonds are standalone counterparts (the focal group is highlighted);
-    edges are directed and labelled with GBP volume, count and fee revenue. Returns the path of
-    the written HTML. `pyvis` is imported lazily so the rest of the module (and its tests) work
-    without the optional render dependency installed.
+    edges are directed and labelled with GBP volume, count and fee revenue. Hovering a node shows
+    its flow, and hovering the focal group reveals the drill level — the direct companies it rolls
+    up (from `curated.edge`). Returns the path of the written HTML. `pyvis` is imported lazily so
+    the rest of the module (and its tests) work without the optional render dependency installed.
     """
     from pyvis.network import Network  # lazy: optional render-only dependency
 
@@ -194,7 +287,7 @@ def render_star_map(
             shape=_PYVIS_SHAPE.get(n["node_shape"], "dot"),
             color="#e4572e" if focal else ("#4c9f70" if n["node_shape"] == "circle" else "#8896ab"),
             size=32 if focal else 18,
-            title=f"{n['name']} ({n['node_kind']}, {n['node_shape']})",
+            title=_node_title(n, edges),
         )
     for e in edges:
         net.add_edge(
@@ -205,17 +298,31 @@ def render_star_map(
         )
     net.set_options(_LAYOUT_OPTIONS)
     net.write_html(str(out), notebook=notebook, open_browser=False)
+
+    # This vis build renders node titles as plain text; make the tooltip honour the newlines in
+    # `_node_title` (default `.vis-tooltip` is `white-space: nowrap`) and left-align the lines.
+    html = out.read_text()
+    html = html.replace(
+        "</head>",
+        "<style>.vis-tooltip{white-space:pre-line;text-align:left;font-family:inherit;}</style></head>",
+        1,
+    )
+    out.write_text(html)
     return out
 
 
 def main() -> None:
-    """Render the default focal group's star map from the built warehouse (optional proof)."""
+    """Render a star map from the built warehouse (optional proof).
+
+    Picks a focal group that visibly connects to other groups, so the illustrative render shows the
+    group-to-group (circle↔circle) structure rather than a hub of standalone diamonds.
+    """
     from . import warehouse
     from .reporting import logger
 
     con = warehouse.connect()
     try:
-        fg = default_focal_group(con)
+        fg = most_group_connected_focal_group(con)
         out = render_star_map(con, fg, top_n=DEFAULT_TOP_N)
     finally:
         con.close()

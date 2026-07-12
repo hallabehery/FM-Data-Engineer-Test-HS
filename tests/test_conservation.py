@@ -208,7 +208,7 @@ def test_quarantine_ledger_reconciles_by_reason(con):
     ledger: dict[str, int] = {}
     for stream in STREAMS:
         for reason, n in con.execute(
-            f"SELECT fx_quarantine_reason, COUNT(*) FROM shape.{stream}_quarantine GROUP BY 1"
+            f"SELECT quarantine_reason, COUNT(*) FROM shape.{stream}_quarantine GROUP BY 1"
         ).fetchall():
             ledger[reason] = ledger.get(reason, 0) + n
 
