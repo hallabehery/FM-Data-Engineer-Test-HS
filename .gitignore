@@ -28,6 +28,10 @@ dist/
 .jupyter/
 *.ipynb_checkpoints
 
+# --- Local tooling noise (agent sessions, pytest cache) ---
+.claude/
+.pytest_cache/
+
 # --- OS / editor noise ---
 .DS_Store
 Thumbs.db
