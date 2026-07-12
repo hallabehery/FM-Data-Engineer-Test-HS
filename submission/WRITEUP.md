@@ -76,9 +76,12 @@ resolves the FX as-of match into per-stream `*_fx` tables keyed 1:1 back to each
 `shape` finishes the job: it flattens the awkward `attributes` array into `attr_*` columns
 (branching on whether each value is a scalar, an object, or an array, so a shape difference can't
 break ingestion), and — after asserting each fact's business key is unique — it *applies* FX
-(`gbp_amount = native × rate`), routing anything unpriceable (bad or missing currency,
-out-of-coverage instant, or a null amount) to a quarantine table. `shape.deposit`/`withdrawal`/`fee`
-are the cleaned, GBP-normalised Silver facts everything downstream reads.
+(`gbp_amount = native × rate`). Priced rows land in the cleaned, GBP-normalised facts
+`shape.deposit`/`withdrawal`/`fee` (everything downstream reads these); anything unpriceable (bad
+or missing currency, out-of-coverage instant, or a null amount) is split off into a parallel
+per-stream quarantine table — `shape.deposit_quarantine` / `withdrawal_quarantine` /
+`fee_quarantine` — carrying its `quarantine_reason`, so the excluded rows are kept and inspectable
+rather than dropped.
 
 Splitting FX across the two schemas is intentional: `core` *selects* the rate, `shape` *applies*
 it. That separates the two ways FX can go wrong — the wrong rate chosen versus the wrong
@@ -115,8 +118,8 @@ file**, so it's an explicit identity — `rate = 1.0`, no rate point — not a f
 (over DuckDB's default 16 MB JSON limit), so it's read with a raised object-size limit.
 
 Crucially, nothing is ever silently mis-priced. Anything we can't price at its instant is
-**quarantined with a stated reason** and kept (not dropped, not null-filled), so the ledger
-reconciles and the row is auditable:
+**quarantined with a stated reason** — kept aside in its stream's `shape.*_quarantine` table, not
+dropped and not null-filled — so the ledger reconciles and the row stays auditable:
 
 | Reason | When |
 |---|---|
