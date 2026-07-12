@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<!--
+  Slides source for submission/slides.pdf (issue #38).
+  Every claim is lifted from submission/WRITEUP.md / plan/ARCHITECTURE.md / the notebooks —
+  no new claims live here. Regenerate the PDF with:
+
+    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless \
+      --print-to-pdf=submission/slides.pdf --no-pdf-header-footer slides/slides.html
+
+  (star_map_screenshot.png is a headless-Chrome capture of submission/star_map.html.)
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Freemarket relationship network — take-home slides</title>
+<style>
+  @page { size: 1280px 720px; margin: 0; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; color: #1f2a37; }
+  .slide {
+    width: 1280px; height: 720px; page-break-after: always; position: relative;
+    padding: 64px 76px 58px; overflow: hidden; background: #ffffff;
+  }
+  .kicker { font-size: 15px; letter-spacing: 2.5px; text-transform: uppercase; color: #e4572e; font-weight: 700; margin-bottom: 10px; }
+  h1 { font-size: 52px; line-height: 1.12; font-weight: 700; letter-spacing: -0.5px; }
+  h2 { font-size: 36px; line-height: 1.15; font-weight: 700; letter-spacing: -0.3px; margin-bottom: 26px; }
+  p, li { font-size: 19px; line-height: 1.5; }
+  .footer {
+    position: absolute; bottom: 22px; left: 76px; right: 76px;
+    display: flex; justify-content: space-between; font-size: 12.5px; color: #9aa5b1;
+  }
+  .accent { color: #e4572e; }
+  .muted { color: #6b7686; }
+  strong { font-weight: 700; }
+  code, .mono { font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 0.92em; }
+  code { background: #f2f4f7; padding: 1px 6px; border-radius: 4px; }
+
+  /* title slide */
+  .title-slide { display: flex; flex-direction: column; justify-content: center; background: #182430; color: #fff; }
+  .title-slide h1 { font-size: 58px; color: #fff; max-width: 950px; }
+  .title-slide .sub { font-size: 22px; color: #b8c2cc; margin-top: 18px; }
+  .statstrip { display: flex; gap: 46px; margin-top: 64px; }
+  .stat .n { font-size: 34px; font-weight: 700; color: #ff7a4d; }
+  .stat .l { font-size: 14px; color: #b8c2cc; margin-top: 4px; }
+  .title-slide .footer { color: #6f7d8a; }
+
+  /* generic layout helpers */
+  .cols { display: flex; gap: 44px; }
+  .col { flex: 1; }
+  .panel { background: #f7f8fa; border: 1px solid #e5e8ee; border-radius: 10px; padding: 20px 24px; }
+  .panel h3 { font-size: 16px; text-transform: uppercase; letter-spacing: 1.5px; color: #e4572e; margin-bottom: 10px; }
+  ul.tick { list-style: none; }
+  ul.tick li { padding-left: 26px; position: relative; margin-bottom: 12px; }
+  ul.tick li::before { content: "—"; position: absolute; left: 0; color: #e4572e; font-weight: 700; }
+
+  table { border-collapse: collapse; width: 100%; }
+  th { text-align: left; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: #6b7686; padding: 8px 14px; border-bottom: 2px solid #d7dce3; }
+  td { font-size: 17px; padding: 9px 14px; border-bottom: 1px solid #e5e8ee; vertical-align: top; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .verdict { font-weight: 700; }
+  .v-kept { color: #4c9f70; } .v-quar { color: #e4572e; } .v-fail { color: #a4550e; }
+
+  /* flow diagram */
+  .flow { display: flex; align-items: stretch; gap: 0; margin: 26px 0 20px; }
+  .layer { flex: 1; }
+  .layer-label { text-align: center; font-size: 14px; letter-spacing: 2px; text-transform: uppercase; font-weight: 700; margin-bottom: 10px; }
+  .bronze .layer-label { color: #a4550e; } .silver .layer-label { color: #64748b; } .gold .layer-label { color: #b98a00; }
+  .schemas { display: flex; gap: 10px; padding: 0 10px; }
+  .schema { flex: 1; border-radius: 10px; padding: 14px 12px 12px; text-align: center; }
+  .bronze .schema { background: #faf0e6; border: 1.5px solid #e0b48a; }
+  .silver .schema { background: #eef1f5; border: 1.5px solid #b9c2cf; }
+  .gold .schema { background: #fdf6e0; border: 1.5px solid #e3cd8a; }
+  .schema .name { font-family: "SF Mono", Menlo, monospace; font-weight: 700; font-size: 18px; }
+  .schema .job { font-size: 13.5px; color: #55606e; margin-top: 6px; line-height: 1.35; }
+  .arrow { align-self: center; font-size: 26px; color: #9aa5b1; padding-top: 26px; }
+
+  .imgwrap { border: 1px solid #e5e8ee; border-radius: 10px; overflow: hidden; height: 440px; background: #fff; }
+  .imgwrap img { display: block; width: 100%; height: 100%; object-fit: contain; }
+  .caption { font-size: 14.5px; color: #6b7686; margin-top: 10px; }
+  .legend-dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin: 0 4px -1px 2px; }
+  .legend-diamond { display: inline-block; width: 11px; height: 11px; margin: 0 5px -1px 3px; background: #8896ab; transform: rotate(45deg); }
+
+  .bigquote { font-size: 30px; line-height: 1.35; font-weight: 600; max-width: 980px; margin: 8px 0 30px; }
+  .stepnum { display: inline-flex; width: 30px; height: 30px; border-radius: 50%; background: #e4572e; color: #fff; font-weight: 700; font-size: 16px; align-items: center; justify-content: center; margin-right: 12px; flex: none; }
+  .steps li { display: flex; align-items: flex-start; margin-bottom: 16px; list-style: none; }
+</style>
+</head>
+<body>
+
+<!-- 1 · Title -->
+<section class="slide title-slide">
+  <div class="kicker">Freemarket · Senior Data Engineer take-home</div>
+  <h1>A trustworthy, GBP-normalised money-flow network</h1>
+  <p class="sub">Bronze → Silver → Gold in a single DuckDB file — from four raw sources to a graph-ready
+     Gold dataset, with every number traceable back to an untouched source row.</p>
+  <div class="statstrip">
+    <div class="stat"><div class="n">12,982</div><div class="l">transactions · Jul–Dec 2025</div></div>
+    <div class="stat"><div class="n">£26.15&thinsp;bn</div><div class="l">GBP-normalised volume</div></div>
+    <div class="stat"><div class="n">1,376</div><div class="l">network nodes</div></div>
+    <div class="stat"><div class="n">4,110</div><div class="l">directed edges</div></div>
+    <div class="stat"><div class="n">101</div><div class="l">tests gating the build</div></div>
+  </div>
+  <div class="footer"><span>Freemarket relationship network — submission walkthrough</span><span>July 2026</span></div>
+</section>
+
+<!-- 2 · The problem -->
+<section class="slide">
+  <div class="kicker">The problem</div>
+  <h2>Commercial and Finance can't answer a basic question</h2>
+  <p class="bigquote">“Who is moving how much money with whom, and&nbsp;when — and what revenue did we earn on&nbsp;it?”</p>
+  <div class="cols">
+    <div class="col panel">
+      <h3>Why it's hard</h3>
+      <ul class="tick">
+        <li>Four raw extracts from different systems, <strong>not built for analytics</strong>: a 4-sheet Excel workbook and three differently-nested JSON files</li>
+        <li>Amounts in <strong>many currencies</strong>; FX rates arrive as ~161k unsorted, time-versioned tuples</li>
+        <li>The corporate hierarchy (group → legal entity → counterparty) is <strong>implicit across sources</strong></li>
+      </ul>
+    </div>
+    <div class="col panel">
+      <h3>What was asked</h3>
+      <ul class="tick">
+        <li>A <strong>Medallion pipeline in DuckDB</strong> — one local file, SQL + Python</li>
+        <li>A Gold dataset driving a <strong>directed money-flow network</strong>: GBP volume, count and fee revenue per relationship</li>
+        <li><strong>Sliceable</strong> by month/year, <strong>drillable</strong> up and down the group ↔ company hierarchy</li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer"><span>Freemarket relationship network</span><span>2</span></div>
+</section>
+
+<!-- 3 · Architecture -->
+<section class="slide">
+  <div class="kicker">Architecture</div>
+  <h2>Three layers, six schemas, one file — per the team's build protocol</h2>
+  <div class="flow">
+    <div class="layer bronze">
+      <div class="layer-label">Bronze · land faithfully</div>
+      <div class="schemas">
+        <div class="schema"><div class="name">raw</div><div class="job">one table per month, source names &amp; types untouched</div></div>
+        <div class="schema"><div class="name">live</div><div class="job">months reunited; facts live here once, names conformed</div></div>
+      </div>
+    </div>
+    <div class="arrow">→</div>
+    <div class="layer silver">
+      <div class="layer-label">Silver · clean &amp; convert</div>
+      <div class="schemas">
+        <div class="schema"><div class="name">core</div><div class="job">JSON unpicked; FX rate <em>selected</em> per fact (as-of match)</div></div>
+        <div class="schema"><div class="name">shape</div><div class="job">FX <em>applied</em> → GBP facts; unpriceable rows quarantined</div></div>
+      </div>
+    </div>
+    <div class="arrow">→</div>
+    <div class="layer gold">
+      <div class="layer-label">Gold · model &amp; present</div>
+      <div class="schemas">
+        <div class="schema"><div class="name">data_mart</div><div class="job">entity dimension + money-flow aggregate, row-level provenance</div></div>
+        <div class="schema"><div class="name">curated</div><div class="job">graph-ready nodes + edges; reads only from data_mart</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="cols">
+    <div class="col panel">
+      <h3>The topology decision — catalog vs schema</h3>
+      <p style="font-size:16.5px">DuckDB shares the <code>catalog.schema.table</code> namespace with Databricks, but a DuckDB
+      catalog is a <strong>physical file</strong> — the “catalog per layer” idiom would need three attached files and break
+      the single-file constraint. So layers map to <strong>schemas</strong>; if the rule were lifted, they lift mechanically
+      to catalogs (<code>ATTACH 'bronze.duckdb'</code>) with schema names unchanged.</p>
+    </div>
+    <div class="col panel">
+      <h3>The underpinning principle</h3>
+      <p style="font-size:16.5px"><strong>Keep the raw fact pure.</strong> Facts land once in Bronze <code>live</code>; FX attaches as a
+      separate keyed table, never as columns bolted onto the fact. Lineage back to an untouched source row is what makes
+      row and measure counts checkable at every layer boundary.</p>
+    </div>
+  </div>
+  <div class="footer"><span>Freemarket relationship network</span><span>3</span></div>
+</section>
+
+<!-- 4 · FX -->
+<section class="slide">
+  <div class="kicker">The central modelling challenge</div>
+  <h2>FX: every amount priced at its own instant — or not at all</h2>
+  <div class="cols">
+    <div class="col">
+      <ul class="tick">
+        <li><strong>Point-in-time as-of join:</strong> each amount converts at the rate whose validity window spans its settlement instant (<code>Tx Date + Tx Time</code>; fees at their date) — cross-currency totals only compare if each amount is priced at its own moment</li>
+        <li><strong>One pure, isolated unit</strong> (<code>src/fx.py</code>): sorts the unsorted rate points once, range-matches <code>validFrom ≤ t &lt; validTill</code> by bisect; independently tested with neither DuckDB nor the 18&nbsp;MB file</li>
+        <li><strong>GBP is an explicit identity</strong> (rate 1.0 — it has no series in the file), not a fudge</li>
+        <li><strong>Full lineage:</strong> every priced fact carries the <code>fx_rate_id</code> of the exact rate point that priced it</li>
+      </ul>
+    </div>
+    <div class="col panel" style="flex:0.88">
+      <h3>Never silently mis-priced</h3>
+      <p style="font-size:16px; margin-bottom:12px">Anything unpriceable is <strong>quarantined with a stated reason</strong> — kept and auditable, never dropped or null-filled:</p>
+      <table style="font-size:15px">
+        <tr><td><code>fx_out_of_coverage</code></td><td>instant outside the file's window</td></tr>
+        <tr><td><code>fx_unknown_currency</code></td><td>no series for the currency</td></tr>
+        <tr><td><code>fx_no_rate_point</code></td><td>gap in the series at that instant</td></tr>
+        <tr><td><code>fx_missing_currency</code></td><td>row has no currency</td></tr>
+        <tr><td><code>fx_missing_instant</code></td><td>row has no settlement instant</td></tr>
+      </table>
+      <p style="font-size:15px; margin-top:12px" class="muted">Splitting “which rate” (<code>core</code>) from “apply the rate” (<code>shape</code>) separates the two ways FX can go wrong into two inspectable stages.</p>
+    </div>
+  </div>
+  <div class="footer"><span>Freemarket relationship network</span><span>4</span></div>
+</section>
+
+<!-- 5 · Data quality -->
+<section class="slide">
+  <div class="kicker">Data quality</div>
+  <h2>Nothing vanishes silently — every exclusion classified, every boundary gated</h2>
+  <table>
+    <tr><th>What the data threw up</th><th style="text-align:right">Count</th><th>Verdict</th><th>Why</th></tr>
+    <tr><td>Fees with no currency</td><td class="num">42</td><td class="verdict v-quar">quarantined</td><td>unpriceable (<code>fx_missing_currency</code>) — the entire quarantine ledger</td></tr>
+    <tr><td>Transaction IDs in both Deposit &amp; Withdrawals</td><td class="num">306</td><td class="verdict v-kept">kept</td><td>distinct streams reusing IDs; fees key on <code>(link_id, fee_type)</code> so nothing fans out</td></tr>
+    <tr><td>Counterparties with no group/company key</td><td class="num">1,363</td><td class="verdict v-kept">kept</td><td>standalone by design → diamond nodes, exactly as the brief expects</td></tr>
+    <tr><td>Counterparties with a key</td><td class="num">222</td><td class="verdict v-kept">kept</td><td>all resolve deterministically to a group — zero orphans, no name-matching needed</td></tr>
+    <tr><td>Duplicate fact key within a stream</td><td class="num">0</td><td class="verdict v-fail">would fail loud</td><td>unique key asserted before pricing — a dup would inflate volume and fan out fees</td></tr>
+    <tr><td>Null amounts / out-of-period rows</td><td class="num">0</td><td class="verdict v-fail">would quarantine / fail</td><td>enforced, not just observed — the next data drop can't slip a bad row through</td></tr>
+  </table>
+  <p style="margin-top:22px; font-size:18px"><strong>Conservation gates the build:</strong> per-month rows sum to <code>live</code> · promoted + quarantined = input ·
+  the 12,982 transactions land in <code>curated.edge</code> uncounted-out · GBP totals unchanged Silver → Gold. Any breach turns <code>make test</code> red.</p>
+  <div class="footer"><span>Freemarket relationship network</span><span>5</span></div>
+</section>
+
+<!-- 6 · The deliverable -->
+<section class="slide" style="padding-top:52px">
+  <div class="kicker">The deliverable</div>
+  <h2 style="margin-bottom:16px">Gold <code>curated</code> drives the graph directly — zero reshaping</h2>
+  <div class="imgwrap"><img src="star_map_screenshot.png" alt="Star map render of the money-flow network"></div>
+  <p class="caption"><code>make render</code> → this star map, read straight from <code>curated.node</code> + <code>curated.edge</code>:
+    focal group <strong>Tech Key</strong>, top-12 counterparts by volume, full period.
+    <span class="legend-dot" style="background:#4c9f70"></span>circles = groups (group↔group flow is first-class — 449 such edges)
+    <span class="legend-diamond"></span>diamonds = standalone counterparties ·
+    directed edges labelled <strong>£ volume · txn count · fee revenue</strong> (green in, orange out).</p>
+  <div class="footer"><span>Freemarket relationship network</span><span>6</span></div>
+</section>
+
+<!-- 7 · Slice & drill -->
+<section class="slide">
+  <div class="kicker">Slice &amp; drill</div>
+  <h2>Any group, any period, any level of the hierarchy — one <code>WHERE</code> clause away</h2>
+  <div class="cols">
+    <div class="col">
+      <ul class="tick">
+        <li>Every edge carries <code>month</code> and <code>year</code> — the month grain is additive, so year and full-period views are plain <strong>roll-ups by summation</strong></li>
+        <li>Every edge carries both <code>focal_group_id</code> and <code>focal_company_id</code> (+ its name) — the fact is stored at the <strong>finest company grain</strong>, so the group view is the sum of its companies, and the drill is <strong>recoverable, not lost</strong></li>
+        <li>Proven in SQL (<code>notebooks/drill.ipynb</code>): star view → named legal entities → one company's own counterparts → <strong>roll-up reconciles to the penny</strong></li>
+      </ul>
+    </div>
+    <div class="col panel" style="flex:0.95">
+      <h3>The drill, concretely (Koba2Maya)</h3>
+      <p style="font-size:16.5px; line-height:1.6">
+        <strong>Group grain:</strong> who does Koba2Maya, as a whole, move money with?<br>
+        <strong>↓ drill:</strong> which of its ~9 legal entities transacted — “Operations Ltd £66m, Group Holdings £18m…”<br>
+        <strong>↓ drill:</strong> who did Operations Ltd itself deal with?<br>
+        <strong>↑ roll up:</strong> the group total equals the sum of its companies — <em>drill is lossless</em>.
+      </p>
+      <p style="font-size:15px; margin-top:12px" class="muted">Hierarchy comes from deterministic keys only
+      (<code>dc_id → company → parentGroup</code>) — no name-matching, no guessing.</p>
+    </div>
+  </div>
+  <div class="footer"><span>Freemarket relationship network</span><span>7</span></div>
+</section>
+
+<!-- 8 · Live ingestion -->
+<section class="slide">
+  <div class="kicker">If this were a live stream</div>
+  <h2>The design already splits at the right seams — four concrete deltas</h2>
+  <ul class="steps" style="max-width:1050px">
+    <li><span class="stepnum">1</span><p><strong>Swap the ingestion source.</strong> <code>build_raw_monthly</code> reads a sheet today; replace that one function with a stream consumer appending events to the Bronze <code>raw</code> month partition. Nothing downstream of <code>live</code> needs to know.</p></li>
+    <li><span class="stepnum">2</span><p><strong>Make Bronze writes append-only and idempotent.</strong> <code>INSERT … ON CONFLICT DO NOTHING</code> on the natural key, so at-least-once delivery and replays can't double-count.</p></li>
+    <li><span class="stepnum">3</span><p><strong>Process incrementally.</strong> Watermark the new rows; <code>money_flow</code> is additive on its grain, so a micro-batch is an upsert into the affected month's aggregate, not a full rebuild.</p></li>
+    <li><span class="stepnum">4</span><p><strong>Refresh FX as a live dimension.</strong> A late-arriving rate point re-prices rows quarantined as <code>fx_no_rate_point</code> — nothing stays stuck.</p></li>
+  </ul>
+  <p class="muted" style="font-size:16.5px">Unchanged: the FX unit, the JSON unpicking, the network model, the quarantine rules, the conservation checks —
+  the transformation logic never cared whether a row came from a sheet or a stream.</p>
+  <div class="footer"><span>Freemarket relationship network</span><span>8</span></div>
+</section>
+
+<!-- 9 · Key decisions -->
+<section class="slide">
+  <div class="kicker">Key decisions</div>
+  <h2>The load-bearing choices — and the alternatives they beat</h2>
+  <div class="cols" style="gap:30px">
+    <div class="col">
+      <ul class="tick">
+        <li><strong>Attach FX, don't bolt it on</strong> — the match lives in its own table keyed to the fact. <span class="muted">Rejected: <code>fx_*</code> columns on the fact (mutates the raw fact, collapses two failure modes into one).</span></li>
+        <li><strong>Quarantine is terminal</strong> — Gold reads only promoted facts; no wrong or null number can reach the product. <span class="muted">Rejected: null-filled GBP (silently poisons totals).</span></li>
+        <li><strong>Money-flow at the finest grain</strong> — company-level rows, group view as roll-up. <span class="muted">Rejected: group grain (drill would be unrecoverable — <code>curated</code> reads only <code>data_mart</code>).</span></li>
+      </ul>
+    </div>
+    <div class="col">
+      <ul class="tick">
+        <li><strong>Enforce integrity, don't assume it</strong> — duplicate keys fail the build, null amounts quarantine; no-ops on this drop, protection for the next one.</li>
+        <li><strong>Deterministic counterpart→group resolution</strong> (<code>group_id</code>, else <code>dc_id → company → group</code>) — zero orphans found, so no fragile name-matching anywhere.</li>
+        <li><strong>One documented deviation</strong> from the build protocol: singular table names (<code>live.deposit</code>, not <code>deposits</code>) — one naming convention across all six schemas; the protocol's substance (one consolidated table per stream) is unchanged.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer"><span>Freemarket relationship network</span><span>9</span></div>
+</section>
+
+<!-- 10 · Trust & next -->
+<section class="slide">
+  <div class="kicker">Why you can trust it — and what's next</div>
+  <h2>Reproducible by construction, honest about the one unknown</h2>
+  <div class="cols">
+    <div class="col panel">
+      <h3>Trust</h3>
+      <ul class="tick" style="font-size:17px">
+        <li><code>make pipeline</code> rebuilds the committed warehouse from scratch, deterministically — same totals every run</li>
+        <li><strong>101 tests</strong> gate the build: the pure FX unit, per-layer invariants, an end-to-end conservation spine, and a write-up completeness tripwire</li>
+        <li>Row-level provenance (<code>source</code> lists) and FX lineage (<code>fx_rate_id</code>) on every Gold row</li>
+      </ul>
+    </div>
+    <div class="col panel">
+      <h3>The one stakeholder question</h3>
+      <p style="font-size:17px">The reference snapshot is from a <strong>different data drop</strong> — its figures don't exist in this data,
+      so it guided <em>shape</em>, not numbers. Whether any snapshot figure is a validated reference for a named group and
+      period is the single question worth an email; everything else was resolvable from the data.</p>
+      <h3 style="margin-top:18px">Next</h3>
+      <ul class="tick" style="font-size:17px">
+        <li>Incremental micro-batch ingestion + orchestrator (Dagster/Airflow)</li>
+        <li>A Gold DQ-reporting view — the quarantine ledger as a product</li>
+        <li>Click-to-expand drill UI on top of <code>curated</code></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer"><span>Freemarket relationship network</span><span>10</span></div>
+</section>
+
+</body>
+</html>
