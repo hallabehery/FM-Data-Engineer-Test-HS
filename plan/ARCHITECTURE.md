@@ -119,9 +119,10 @@ Excel Fees ───────────────────────
 
 - **Tables:** singular, `snake_case` (`deposit`, not `Deposits`).
 - **Columns:** `lower_snake_case`, no spaces/slashes/parentheses (`tx_value_ccy`, not `"Tx Value (CCY)"`).
-- One canonical rename map (`src/naming.py`), applied at Bronze landing; raw **values/types**
-  preserved, only names conformed. (This deviates from `build_protocol.md`'s literal plural table
-  names — an intentional, documented cleanup.)
+- One canonical rename map (`src/naming.py`), applied when consolidating Bronze `raw` → `live`
+  (conforming names is a cleaning step, so `raw` stays source-faithful and `live` onward is
+  `snake_case`); raw **values/types** preserved, only names conformed. (This deviates from
+  `build_protocol.md`'s literal plural table names — an intentional, documented cleanup.)
 
 ## 9. Engineering standards (summary)
 

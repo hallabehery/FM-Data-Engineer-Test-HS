@@ -66,10 +66,26 @@ def test_each_row_lands_in_exactly_one_month(con):
     for ym in config.PERIOD_MONTHS:
         table = f"raw.deposit_{ym.replace('-', '_')}"
         off_month = con.execute(
-            f"SELECT COUNT(*) FROM {table} "
-            f"WHERE CAST(date_trunc('month', tx_date) AS DATE) <> DATE '{ym}-01'"
+            f'SELECT COUNT(*) FROM {table} '
+            f'WHERE CAST(date_trunc(\'month\', "Tx Date") AS DATE) <> DATE \'{ym}-01\''
         ).fetchone()[0]
         assert off_month == 0, f"{table} contains rows from another month"
+
+
+@SKIP
+def test_raw_preserves_source_column_names(con):
+    # raw is the faithful mirror: source names kept as-is (conforming happens in live),
+    # and every source column is landed — nothing silently projected away.
+    bronze.build_raw_monthly(con)
+    con.execute("INSTALL excel; LOAD excel;")
+    source_cols = {
+        r[0] for r in con.execute(
+            f"DESCRIBE SELECT * FROM read_xlsx('{config.TRANSACTIONS_XLSX}', sheet='Deposit')"
+        ).fetchall()
+    }
+    raw_cols = {r[0] for r in con.execute("DESCRIBE raw.deposit_2025_07").fetchall()}
+    assert raw_cols == source_cols
+    assert "Tx Value (CCY)" in raw_cols  # a source name, un-conformed
 
 
 @SKIP

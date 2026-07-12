@@ -1,12 +1,14 @@
 """Bronze — landing the raw sources with minimal transformation.
 
-`raw` holds the transactional sheets **split one table per month** (July–December
-2025); `live` consolidates them and lands the counterparty and fee sheets. Rows are
-landed with their raw **values/types preserved**; column **names** are conformed to
-`snake_case` at landing (via `naming`), so every downstream table is `snake_case`.
+`raw` holds the transactional sheets **split one table per month** (July–December 2025),
+landed **as-is** — source column names and values/types preserved — so `raw` is a faithful,
+auditable mirror of the workbook. `live` then **consolidates** the months into single tables
+and lands the counterparty and fee sheets; the column **names** are conformed to `snake_case`
+at this consolidation step (via `naming`), so every layer downstream of `live` is `snake_case`
+while `raw` stays true to source.
 
-Month assignment is driven by the transaction's own date (`tx_date`), not the provided
-`tx_month` convenience column. The build fails loud if any row falls outside the
+Month assignment is driven by the transaction's own date (source `"Tx Date"`), not the
+provided `Tx Month` convenience column. The build fails loud if any row falls outside the
 six-month period.
 """
 from __future__ import annotations
@@ -42,22 +44,23 @@ def _validate_columns(
 
 
 def build_raw_monthly(con: duckdb.DuckDBPyConnection) -> list[StageReport]:
-    """Land Deposit/Withdrawals as one `raw` table per month. Idempotent.
+    """Land Deposit/Withdrawals as one `raw` table per month, source-faithful. Idempotent.
 
-    Columns are aliased to `snake_case` on landing; raises if any source row fails
-    to land in exactly one month table.
+    Columns are landed **as-is** (`SELECT *` — source names and inferred types preserved), so
+    `raw` mirrors the workbook and nothing is silently projected away. Names are conformed later,
+    in `build_live`. Raises if any source row fails to land in exactly one month table.
     """
     con.execute("INSTALL excel; LOAD excel;")
     xlsx = config.TRANSACTIONS_XLSX
-    alias = naming.aliased_select(naming.TRANSACTION_COLUMNS)
     reports: list[StageReport] = []
 
     for sheet, stream in SHEETS.items():
         relation = _read_relation(xlsx, sheet)
         _validate_columns(con, relation, EXPECTED_COLUMNS, sheet)
 
-        # Read once with snake_case aliases, then split from the temp table.
-        con.execute(f"CREATE OR REPLACE TEMP TABLE _src AS SELECT {alias} FROM {relation}")
+        # Land the sheet as-is (raw = faithful mirror), then split from the temp table on the
+        # transaction's own date (source column "Tx Date").
+        con.execute(f"CREATE OR REPLACE TEMP TABLE _src AS SELECT * FROM {relation}")
         source_rows = con.execute("SELECT COUNT(*) FROM _src").fetchone()[0]
 
         landed = 0
@@ -68,7 +71,7 @@ def build_raw_monthly(con: duckdb.DuckDBPyConnection) -> list[StageReport]:
                 CREATE OR REPLACE TABLE {table} AS
                 SELECT *
                 FROM _src
-                WHERE CAST(date_trunc('month', tx_date) AS DATE) = DATE '{year_month}-01'
+                WHERE CAST(date_trunc('month', "Tx Date") AS DATE) = DATE '{year_month}-01'
                 """
             )
             landed += con.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
@@ -112,17 +115,22 @@ def build_live(con: duckdb.DuckDBPyConnection) -> list[StageReport]:
     """Consolidate the per-month raw tables into single `live` tables, and land
     the counterparty and fee sheets. Idempotent.
 
-    Consolidation uses `UNION ALL BY NAME` so columns align on name, never position.
-    Raises if a stream's consolidated count does not match the sum of its months.
+    This is where names are conformed: each source-named `raw` month table is projected to
+    `snake_case` (via `naming`) and the months are combined with `UNION ALL BY NAME`, so columns
+    align on name, never position. Raises if a stream's consolidated count does not match the
+    sum of its months.
     """
     con.execute("INSTALL excel; LOAD excel;")
+    alias = naming.aliased_select(naming.TRANSACTION_COLUMNS)
     reports: list[StageReport] = []
 
     for stream in SHEETS.values():  # "deposit", "withdrawal"
         month_tables = [
             f"raw.{stream}_{ym.replace('-', '_')}" for ym in config.PERIOD_MONTHS
         ]
-        union_sql = " UNION ALL BY NAME ".join(f"SELECT * FROM {t}" for t in month_tables)
+        union_sql = " UNION ALL BY NAME ".join(
+            f"SELECT {alias} FROM {t}" for t in month_tables
+        )
         con.execute(f"CREATE OR REPLACE TABLE live.{stream} AS {union_sql}")
 
         raw_total = sum(

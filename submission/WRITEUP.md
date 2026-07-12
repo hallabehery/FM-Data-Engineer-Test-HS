@@ -59,11 +59,15 @@ row/measure counts checkable at every boundary (see [Data quality](#data-quality
 
 **Bronze - land it, don't touch it.** The Deposit and Withdrawal sheets are split into one `raw`
 table per month, keyed off each transaction's own date (not the workbook's convenience
-`tx_month`), so a problem in one month is a small, isolated fix that flows through on rebuild; the
-build fails loud if any row falls outside the Jul–Dec window. `live` then reunites them into single
-`deposit`/`withdrawal` tables and lands the `counterparty` and `fee` sheets. The two sheets differ
-in column order, so consolidation is `UNION ALL BY NAME` — aligned on name, never position. Values
-and types are untouched; only column names are conformed to `snake_case`.
+`Tx Month`), so a problem in one month is a small, isolated fix that flows through on rebuild; the
+build fails loud if any row falls outside the Jul–Dec window. `raw` is landed **as-is** — source
+column names and types preserved, nothing projected away — so it stays a faithful, auditable
+mirror of the workbook. `live` then reunites the months into single `deposit`/`withdrawal` tables
+(and lands `counterparty` and `fee`), and it's *here*, not in `raw`, that names are conformed:
+the two sheets differ in column order, so consolidation projects each to `snake_case` and combines
+them with `UNION ALL BY NAME` — aligned on name, never position. Conforming names is a cleaning
+step, so it belongs at the `live` boundary; `raw` stays true to source. Values and types are
+untouched throughout.
 
 **Silver - clean and convert.** `core` does the heavy lifting: it unpicks the nested
 `companies.json` and `groups.json` into flat columns (validating the top-level shape first, so a
