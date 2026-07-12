@@ -4,10 +4,10 @@ This document includes how the pipeline is laid out, where each transformation l
 [`plan/ARCHITECTURE.md`](../plan/ARCHITECTURE.md) (topology/data-flow) and
 [`docs/build_protocol.md`](../docs/build_protocol.md) (the data team's build order).
 
-## What it is, and how to run it
+## What it is and how to run it
 
-It's a Bronze → Silver → Gold pipeline in a single DuckDB file. It ingests four raw sources — a
-4-sheet Excel workbook and three nested JSON files — and converts every amount to GBP at the rate
+It's a Bronze → Silver → Gold pipeline in a single DuckDB file. It ingests four raw sources, a
+4-sheet Excel workbook and three nested JSON files, and converts every amount to GBP at the rate
 effective at its own instant. The output is a **directed money-flow network**: groups and their
 counterparts as nodes, and directed edges carrying GBP volume, transaction count and fee revenue.
 The whole network slices by month/year and drills down the group → company hierarchy.
@@ -26,7 +26,9 @@ For scale, this data drop: **12,982 transactions** (6,383 deposits + 6,599 withd
 fees, 1,585 counterparties, 13 groups, 44 companies — resolving to **1,376 nodes** (13 group
 circles + 1,363 standalone diamonds) and **4,110 directed edges** carrying **£26.15 bn** of volume.
 
-## How it's laid out — one file, six schemas
+## How it's laid out
+
+### one file, six schemas
 
 The whole warehouse is a single DuckDB file, so the medallion layers map to **schemas**, not
 catalogs. This is a deliberate choice worth explaining, because DuckDB shares the
@@ -41,18 +43,21 @@ Instead the three layers each split into two schemas inside the one `warehouse` 
 | **Silver** | `core`, `shape` | clean, resolve relationships, normalise to GBP |
 | **Gold** | `data_mart`, `curated` | model the network, then present it |
 
-If the single-file rule were ever lifted, the layers would lift cleanly to catalogs
+If the single-file rule was lifted, the layers would lift cleanly to catalogs
 (`ATTACH 'bronze.duckdb' AS bronze` → `bronze.raw.deposit`) with the schema names unchanged — a
 mechanical migration. That trade-off is the intended talking point for the discussion round.
 
-One rule underpins everything: **facts live exactly once.** The transaction and fee facts land in
-Bronze `live` and are never copied forward — every later layer references them rather than
-duplicating them. That keeps a single source of truth and makes row/measure counts checkable at
-every boundary (see [Data quality](#data-quality)).
+One principle underpins everything: **keep the raw fact pure.** The transaction and fee facts land
+once in Bronze `live`. Silver `core` doesn't copy them — it attaches FX as a separate table keyed
+back to the `live` fact, rather than bolting `fx_*` columns onto the fact itself. Silver `shape`
+*does* then materialise cleaned, GBP-normalised fact tables and Gold aggregates them — that
+per-layer materialisation is ordinary medallion practice; the discipline is only that the raw fact
+is never mutated in place. Keeping lineage traceable to an untouched source row is what makes
+row/measure counts checkable at every boundary (see [Data quality](#data-quality)).
 
 ## The pipeline, layer by layer
 
-**Bronze — land it, don't touch it.** The Deposit and Withdrawal sheets are split into one `raw`
+**Bronze - land it, don't touch it.** The Deposit and Withdrawal sheets are split into one `raw`
 table per month, keyed off each transaction's own date (not the workbook's convenience
 `tx_month`), so a problem in one month is a small, isolated fix that flows through on rebuild; the
 build fails loud if any row falls outside the Jul–Dec window. `live` then reunites them into single
@@ -60,21 +65,23 @@ build fails loud if any row falls outside the Jul–Dec window. `live` then reun
 in column order, so consolidation is `UNION ALL BY NAME` — aligned on name, never position. Values
 and types are untouched; only column names are conformed to `snake_case`.
 
-**Silver — clean and convert.** `core` does the heavy lifting: it unpicks the nested
+**Silver - clean and convert.** `core` does the heavy lifting: it unpicks the nested
 `companies.json` and `groups.json` into flat columns (validating the top-level shape first, so a
 source change fails here rather than corrupting Gold), lands the FX rate points as a dimension, and
 resolves the FX as-of match into per-stream `*_fx` tables keyed 1:1 back to each `live` fact.
 `shape` finishes the job: it flattens the awkward `attributes` array into `attr_*` columns
 (branching on whether each value is a scalar, an object, or an array, so a shape difference can't
-break ingestion), and it *applies* FX — `gbp_amount = native × rate` — sending anything unpriceable
-to a quarantine table.
+break ingestion), and — after asserting each fact's business key is unique — it *applies* FX
+(`gbp_amount = native × rate`), routing anything unpriceable (bad or missing currency,
+out-of-coverage instant, or a null amount) to a quarantine table. `shape.deposit`/`withdrawal`/`fee`
+are the cleaned, GBP-normalised Silver facts everything downstream reads.
 
 Splitting FX across the two schemas is intentional: `core` *selects* the rate, `shape` *applies*
 it. That separates the two ways FX can go wrong — the wrong rate chosen versus the wrong
 arithmetic — into two stages you can inspect independently, and it keeps the `live` fact pure (no
 `fx_*` columns bolted onto it).
 
-**Gold — model, then present.** `data_mart` holds the modelled network, each row tagged with a
+**Gold - model, then present.** `data_mart` holds the modelled network, each row tagged with a
 `source` provenance list. `entity` unifies groups, companies and counterparties, resolving each
 counterparty to a group where a deterministic key exists (its `group_id`, or `dc_id → company →
 group`); the ~1,363 with neither key stand alone by design. `money_flow` is the directed aggregate,
@@ -89,7 +96,7 @@ participate in an edge, and `edge` is a 1:1 projection of `money_flow` into dire
 target` rows. Keeping it a pure projection is what lets a graph tool consume it with no further
 shaping — and lets a test assert equal rows and measures against `money_flow`.
 
-## FX — the hard part
+## FX transformation
 
 Every amount is converted at the rate effective **at its own instant** (a point-in-time / as-of
 join), because cross-currency totals only compare if each amount is priced at its own moment. The
@@ -122,7 +129,11 @@ traces back to its rate and validity window.
 
 The policy is simple: **nothing vanishes silently.** Every exclusion is classified — **dropped /
 quarantined / kept** — with a reason, and each layer boundary asserts a conservation count as it
-runs. Here's everything the data threw up in this drop:
+runs. The facts themselves actually arrived clean, so Silver's work on them is GBP normalisation
+plus the one quarantine below. Importantly, the integrity checks are **enforced, not just
+observed**: a duplicate fact key fails the build, and an unpriceable row is quarantined — so the
+*next* data drop can't slip a bad row through, even though this one has none. Here's everything the
+data threw up:
 
 | What we found | Count | Verdict | Why |
 |---|---:|---|---|
@@ -131,13 +142,16 @@ runs. Here's everything the data threw up in this drop:
 | Counterparties with no group/company key | 1,363 | **kept** | standalone by design → diamond nodes, exactly as the brief expects |
 | Counterparties with a key | 222 | **kept** | resolve to a group with **zero orphans**, so no fragile name-matching was needed |
 | `CP website` breaks type inference | — | **kept** | that one sheet lands as all-VARCHAR; others keep inference so dates/amounts stay typed |
+| Duplicate `transaction_id`/`fee_id` within a stream | 0 | **would fail loud** | `validate_facts` asserts a unique key before pricing — a dup would inflate volume/count and fan out fee revenue |
+| Transaction/fee with a null amount | 0 | **would quarantine** | can't be priced (`amount_missing`); routed aside like a null currency, never promoted as a silent null GBP |
 | Transactions outside Jul–Dec | 0 | **would fail loud** | Bronze raises rather than dropping — a period contract |
 
 **Nothing is dropped.** Every row is either promoted to GBP or quarantined with a reason. The
-conservation suite gates the build on this: per-month rows sum to `live`; each fact matches exactly
-one FX row; promoted + quarantined = input; the 12,982 transactions survive Bronze → Silver → Gold
-uncounted-out and land as `curated.edge` `txn_count`; and GBP volume/fee totals are unchanged from
-Silver through to `curated`. If any invariant breaks, `make test` goes red.
+conservation suite gates the build on all of it: per-month rows sum to `live`; each fact has a
+unique key and matches exactly one FX row; promoted + quarantined = input; the 12,982 transactions
+survive Bronze → Silver → Gold uncounted-out and land as `curated.edge` `txn_count`; and GBP
+volume/fee totals are unchanged from Silver through to `curated`. If any invariant breaks, `make
+test` goes red.
 
 ## If the source were a live-stream
 

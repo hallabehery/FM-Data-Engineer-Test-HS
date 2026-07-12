@@ -46,7 +46,7 @@ def test_fee_quarantine_is_the_42_null_currency_rows(con):
     assert fee_q == 42
     reasons = {
         r[0] for r in con.execute(
-            "SELECT DISTINCT fx_quarantine_reason FROM shape.fee_quarantine"
+            "SELECT DISTINCT quarantine_reason FROM shape.fee_quarantine"
         ).fetchall()
     }
     assert reasons == {"fx_missing_currency"}
@@ -82,4 +82,33 @@ def test_promoted_carries_lineage_and_quarantine_does_not_price(con):
     quar_cols = {r[0] for r in con.execute("DESCRIBE shape.fee_quarantine").fetchall()}
     assert {"fx_rate", "fx_rate_id", "gbp_amount"} <= prom_cols
     assert "gbp_amount" not in quar_cols
-    assert "fx_quarantine_reason" in quar_cols
+    assert "quarantine_reason" in quar_cols
+
+
+@SKIP
+def test_validate_facts_rejects_a_duplicate_business_key(con):
+    # Inject a duplicate transaction_id into a stream; validation must fail loud.
+    con.execute("INSERT INTO live.deposit SELECT * FROM live.deposit LIMIT 1")
+    with pytest.raises(ValueError, match="duplicate"):
+        silver_shape.validate_facts(con)
+    # And it's wired into the build, so building the GBP facts fails loud too.
+    with pytest.raises(ValueError, match="duplicate"):
+        silver_shape.build_gbp_facts(con)
+
+
+@SKIP
+def test_null_native_amount_is_quarantined_not_priced(con):
+    # A NULL native amount can't be priced (amount × rate would be a silent NULL) → quarantine.
+    con.execute(
+        "UPDATE live.deposit SET tx_value_ccy = NULL "
+        "WHERE transaction_id = (SELECT transaction_id FROM live.deposit LIMIT 1)"
+    )
+    silver_shape.build_gbp_facts(con)
+    q = con.execute(
+        "SELECT COUNT(*) FROM shape.deposit_quarantine WHERE quarantine_reason = 'amount_missing'"
+    ).fetchone()[0]
+    assert q == 1
+    # It did not slip into the priced table with a NULL gbp_amount.
+    assert con.execute(
+        "SELECT COUNT(*) FROM shape.deposit WHERE gbp_amount IS NULL"
+    ).fetchone()[0] == 0
