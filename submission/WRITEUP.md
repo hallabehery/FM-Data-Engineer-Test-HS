@@ -20,7 +20,7 @@ make render      # optional: submission/star_map.html, an illustrative graph
 ```
 
 All transformation logic lives in tested `src/` modules; the notebook
-[`pipeline.ipynb`](../notebook/pipeline.ipynb) just orchestrates and narrates them top-to-bottom.
+[`pipeline.ipynb`](../notebooks/pipeline.ipynb) just orchestrates and narrates them top-to-bottom.
 
 For scale, this data drop: **12,982 transactions** (6,383 deposits + 6,599 withdrawals), 21,921
 fees, 1,585 counterparties, 13 groups, 44 companies — resolving to **1,376 nodes** (13 group
@@ -217,7 +217,7 @@ focal group even reveals its drill level — the direct companies it rolls up **
 `curated.edge.focal_company_name`) — so the hierarchy is visible, not just present in the data. (It's
 a static illustrative snapshot, not a click-to-expand app — that production UI is out of scope.)
 
-The drill itself is proven in SQL in a separate notebook, [`notebook/drill.ipynb`](../notebook/drill.ipynb):
+The drill itself is proven in SQL in a separate notebook, [`notebooks/drill.ipynb`](../notebooks/drill.ipynb):
 using `curated` alone it shows the group-grain star view, resolves the same group down to its named
 direct companies, drills into one company's own counterparts, and confirms the group total is exactly
 the sum of its companies (drill is lossless) — all sliceable by month.

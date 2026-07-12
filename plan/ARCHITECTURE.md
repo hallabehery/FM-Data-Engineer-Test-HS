@@ -141,6 +141,6 @@ plan/tickets.md             work breakdown + status
 plan/ARCHITECTURE.md        this document (design/topology)
 src/                        pipeline modules (config, naming, warehouse, bronze, silver_core, silver_shape, fx, gold, reporting, pipeline)
 tests/                      per-layer + FX unit tests
-notebook/pipeline.ipynb     thin orchestrator that calls src/
+notebooks/pipeline.ipynb    thin orchestrator that calls src/
 submission/warehouse.duckdb built output (git-ignored)
 ```
