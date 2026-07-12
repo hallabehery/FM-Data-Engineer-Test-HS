@@ -1,16 +1,18 @@
 # --- Internal hiring material — never distribute to candidates ---
 _internal/
 
-# --- DuckDB warehouse (candidates commit their own; keep the repo template clean) ---
-# Comment the next line out if you want to hand back a pre-populated warehouse.
-warehouse.duckdb
-warehouse.duckdb.wal
+# --- DuckDB warehouse ---
+# The populated submission/warehouse.duckdb IS committed — SETUP.md §8 asks for the populated
+# warehouse to be handed back (committed or zipped). It's a build output (`make pipeline`),
+# never hand-edited. Every other .duckdb stays ignored (e.g. a stray root-level warehouse
+# from running the SETUP examples), as do write-ahead logs.
 *.duckdb
 *.duckdb.wal
+!submission/warehouse.duckdb
 
-# Note: submission/star_map.html IS committed — it's a small (~700 KB), self-contained
+# Note: submission/star_map.html IS also committed — a small (~700 KB), self-contained
 # illustrative deliverable a reviewer can open straight from the repo (regenerate with
-# `make render`). Unlike the multi-MB warehouse binary above, it's worth versioning.
+# `make render`).
 
 # --- Python ---
 .venv/
