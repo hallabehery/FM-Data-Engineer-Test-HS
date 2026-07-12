@@ -52,6 +52,22 @@ def test_default_focal_group_is_the_top_by_volume(con):
 
 
 @SKIP
+def test_most_group_connected_shows_group_circles(con):
+    fg = render.most_group_connected_focal_group(con)
+    nodes, _ = render.star_map_frame(con, fg, top_n=render.DEFAULT_TOP_N)
+    circles = [n for n in nodes if n["node_shape"] == "circle" and not n["is_focal"]]
+    # The whole point: this focal group's view surfaces group↔group links (≥1 counterpart circle),
+    # and it's at least as group-connected as the volume-default under the same cap.
+    assert len(circles) >= 1
+    dflt = render.default_focal_group(con)
+    dflt_circles = sum(
+        1 for n in render.star_map_frame(con, dflt, top_n=render.DEFAULT_TOP_N)[0]
+        if n["node_shape"] == "circle" and not n["is_focal"]
+    )
+    assert len(circles) >= dflt_circles
+
+
+@SKIP
 def test_nodes_carry_shape_verbatim_from_curated(con):
     fg = render.default_focal_group(con)
     nodes, _ = render.star_map_frame(con, fg, top_n=None)

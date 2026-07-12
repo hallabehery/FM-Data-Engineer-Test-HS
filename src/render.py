@@ -63,6 +63,29 @@ def default_focal_group(con: duckdb.DuckDBPyConnection) -> str:
     return row[0]
 
 
+def most_group_connected_focal_group(
+    con: duckdb.DuckDBPyConnection, *, top_n: int | None = DEFAULT_TOP_N
+) -> str:
+    """Return the focal group whose top-N view shows the most *group* counterparts (circle↔circle).
+
+    The top-by-volume default can be dominated by a few huge standalone flows, hiding the
+    group-to-group structure. This picks a focal group where other groups actually appear within the
+    capped view — so the illustrative render shows circles connected to circles, not only diamonds.
+    Ties broken by total volume.
+    """
+    best_key: tuple[int, float] | None = None
+    best_fg: str | None = None
+    for (fg,) in con.execute("SELECT DISTINCT focal_group_id FROM curated.edge").fetchall():
+        nodes, edges = star_map_frame(con, fg, top_n=top_n)
+        circles = sum(1 for n in nodes if n["node_shape"] == "circle" and not n["is_focal"])
+        key = (circles, sum(e["gbp_volume"] for e in edges))
+        if best_key is None or key > best_key:
+            best_key, best_fg = key, fg
+    if best_fg is None:
+        raise ValueError("curated.edge is empty — build the pipeline before rendering")
+    return best_fg
+
+
 def _normalise_month(month: str | date | None) -> str | None:
     """Normalise a month slice to a first-of-month `YYYY-MM-01` string (or None)."""
     if month is None:
@@ -189,6 +212,8 @@ def _node_title(node: dict[str, Any], edges: list[dict[str, Any]]) -> str:
     `curated.edge.focal_company_id`) with their GBP split; a counterpart's shows its flow with the
     focal group and — for a standalone diamond — that it is a leaf with no sub-entities.
     """
+    # This vis-network build renders node titles as plain text, so the tooltip uses newlines (not
+    # HTML <br>); render_star_map injects a `white-space: pre-line` rule so the lines break.
     name = node["name"] or node["node_id"]
     if node["is_focal"]:
         inflow = sum(e["gbp_volume"] for e in edges if e["direction"] == "inflow")
@@ -196,7 +221,7 @@ def _node_title(node: dict[str, Any], edges: list[dict[str, Any]]) -> str:
         companies = node.get("companies") or []
         noun = "company" if len(companies) == 1 else "companies"
         lines = [
-            f"<b>{name}</b>", "Focal group",
+            f"{name} — focal group",
             f"Inflow £{inflow:,.0f} · Outflow £{outflow:,.0f}",
             f"Drill level — {len(companies)} direct {noun} transacted:",
         ]
@@ -206,7 +231,7 @@ def _node_title(node: dict[str, Any], edges: list[dict[str, Any]]) -> str:
         ]
         if len(companies) > 5:
             lines.append(f"• +{len(companies) - 5} more")
-        return "<br>".join(lines)
+        return "\n".join(lines)
 
     cid = node["node_id"]
     mine = [e for e in edges if e["counterpart_id"] == cid]
@@ -215,11 +240,11 @@ def _node_title(node: dict[str, Any], edges: list[dict[str, Any]]) -> str:
     txns = sum(int(e["txn_count"]) for e in mine)
     fee = sum(e["gbp_fee_revenue"] for e in mine)
     kind = (
-        "Group counterpart" if node["node_shape"] == "circle"
-        else "Standalone counterpart (leaf — no sub-entities)"
+        "group counterpart" if node["node_shape"] == "circle"
+        else "standalone counterpart (leaf — no sub-entities)"
     )
-    return "<br>".join([
-        f"<b>{name}</b>", kind,
+    return "\n".join([
+        f"{name} — {kind}",
         f"Inflow £{inflow:,.0f} · Outflow £{outflow:,.0f}",
         f"{txns} txns · £{fee:,.0f} fee",
     ])
@@ -271,17 +296,31 @@ def render_star_map(
         )
     net.set_options(_LAYOUT_OPTIONS)
     net.write_html(str(out), notebook=notebook, open_browser=False)
+
+    # This vis build renders node titles as plain text; make the tooltip honour the newlines in
+    # `_node_title` (default `.vis-tooltip` is `white-space: nowrap`) and left-align the lines.
+    html = out.read_text()
+    html = html.replace(
+        "</head>",
+        "<style>.vis-tooltip{white-space:pre-line;text-align:left;font-family:inherit;}</style></head>",
+        1,
+    )
+    out.write_text(html)
     return out
 
 
 def main() -> None:
-    """Render the default focal group's star map from the built warehouse (optional proof)."""
+    """Render a star map from the built warehouse (optional proof).
+
+    Picks a focal group that visibly connects to other groups, so the illustrative render shows the
+    group-to-group (circle↔circle) structure rather than a hub of standalone diamonds.
+    """
     from . import warehouse
     from .reporting import logger
 
     con = warehouse.connect()
     try:
-        fg = default_focal_group(con)
+        fg = most_group_connected_focal_group(con)
         out = render_star_map(con, fg, top_n=DEFAULT_TOP_N)
     finally:
         con.close()
