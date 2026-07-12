@@ -2,12 +2,10 @@
 <!--
   Slides source for submission/slides.pdf (issue #38).
   Every claim is lifted from submission/WRITEUP.md / plan/ARCHITECTURE.md / the notebooks —
-  no new claims live here. Regenerate the PDF with:
-
-    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless \
-      --print-to-pdf=submission/slides.pdf --no-pdf-header-footer slides/slides.html
-
-  (star_map_screenshot.png is a headless-Chrome capture of submission/star_map.html.)
+  no new claims live here. Regenerate the PDF with `make slides` (needs Chrome; override the
+  binary with `make slides CHROME=/path/to/chrome`). star_map_screenshot.png is a
+  headless-Chrome capture of submission/star_map.html — regenerate with `make screenshot`
+  (the vis.js physics layout varies slightly per run, so it is only rebuilt on demand).
 -->
 <html lang="en">
 <head>
@@ -216,7 +214,7 @@
     <tr><td>Counterparties with no group/company key</td><td class="num">1,363</td><td class="verdict v-kept">kept</td><td>standalone by design → diamond nodes, exactly as the brief expects</td></tr>
     <tr><td>Counterparties with a key</td><td class="num">222</td><td class="verdict v-kept">kept</td><td>all resolve deterministically to a group — zero orphans, no name-matching needed</td></tr>
     <tr><td>Duplicate fact key within a stream</td><td class="num">0</td><td class="verdict v-fail">would fail loud</td><td>unique key asserted before pricing — a dup would inflate volume and fan out fees</td></tr>
-    <tr><td>Null amounts / out-of-period rows</td><td class="num">0</td><td class="verdict v-fail">would quarantine / fail</td><td>enforced, not just observed — the next data drop can't slip a bad row through</td></tr>
+    <tr><td>Null amounts · out-of-period rows</td><td class="num">0</td><td class="verdict v-fail">quarantine · fail loud</td><td>null amount → quarantined like a bad currency; out-of-period → Bronze raises. Enforced, not just observed — the next drop can't slip a bad row through</td></tr>
   </table>
   <p style="margin-top:22px; font-size:18px"><strong>Conservation gates the build:</strong> per-month rows sum to <code>live</code> · promoted + quarantined = input ·
   the 12,982 transactions land in <code>curated.edge</code> uncounted-out · GBP totals unchanged Silver → Gold. Any breach turns <code>make test</code> red.</p>
@@ -252,12 +250,14 @@
       <h3>The drill, concretely (Koba2Maya)</h3>
       <p style="font-size:16.5px; line-height:1.6">
         <strong>Group grain:</strong> who does Koba2Maya, as a whole, move money with?<br>
-        <strong>↓ drill:</strong> which of its ~9 legal entities transacted — “Operations Ltd £66m, Group Holdings £18m…”<br>
-        <strong>↓ drill:</strong> who did Operations Ltd itself deal with?<br>
+        <strong>↓ drill:</strong> which of its 18 legal entities transacted — <em>two separate entities
+        both named</em> “Operations Ltd” (£66m and £18m), “Group Holdings £6.7m”…<br>
+        <strong>↓ drill:</strong> who did the £66m entity itself deal with?<br>
         <strong>↑ roll up:</strong> the group total equals the sum of its companies — <em>drill is lossless</em>.
       </p>
       <p style="font-size:15px; margin-top:12px" class="muted">Hierarchy comes from deterministic keys only
-      (<code>dc_id → company → parentGroup</code>) — no name-matching, no guessing.</p>
+      (<code>dc_id → company → parentGroup</code>) — no name-matching, no guessing. Names duplicate
+      across jurisdictions; the <strong>id is the key</strong>, the name is just the label.</p>
     </div>
   </div>
   <div class="footer"><span>Freemarket relationship network</span><span>7</span></div>

@@ -15,7 +15,8 @@ movement. There are four kinds of "thing" in the data:
 - **Group** — a corporate client of Freemarket. Example: **Koba2Maya** (`192230405343`), a Gaming
   company on the "Silver" commercial tier. Think of a group as the *umbrella brand*.
 - **Direct company** — an actual legal entity that belongs to a group and holds the accounts that
-  transact. Koba2Maya isn't one company — it's ~9 legal entities in different countries:
+  transact. Koba2Maya isn't one company — it's **18 legal entities** (only 10 distinct names — brands
+  reuse names across jurisdictions) in different countries:
   - `Koba2Maya Operations Ltd`, `Koba2Maya Group Holdings Ltd` (Lithuania), `Koba2Maya Group
     Holdings Ltd` (Malta), `Koba2Maya Holding S.à r.l.` (Cayman Islands / Isle of Man)… — same
     brand, separate legal entities.
@@ -96,7 +97,9 @@ cell answers one plain question:
    in/out per counterparty. → *"Who does Koba2Maya, as a whole, move money with?"* This is the
    picture the star map draws.
 2. **Drill down to companies** — the same group, now split by which entity did it: "Operations Ltd
-   £66m, Group Holdings Ltd £18m, …". → *"Which of Koba2Maya's legal entities actually transacted?"*
+   £66m, a *second, separate* entity also named Operations Ltd £18m, Group Holdings Ltd £6.7m, …"
+   (the ids tell the two Operations Ltds apart — see the note below). → *"Which of Koba2Maya's
+   legal entities actually transacted?"*
 3. **Drill into one company** — take the biggest entity and show *its* counterparties. → *"Who
    specifically did Koba2Maya Operations Ltd deal with?"*
 4. **Roll back up** — prove that summing the companies equals the group total, to the penny
