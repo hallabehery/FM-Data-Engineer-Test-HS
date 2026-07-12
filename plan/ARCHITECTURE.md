@@ -142,5 +142,7 @@ plan/ARCHITECTURE.md        this document (design/topology)
 src/                        pipeline modules (config, naming, warehouse, bronze, silver_core, silver_shape, fx, gold, reporting, pipeline)
 tests/                      per-layer + FX unit tests
 notebooks/pipeline.ipynb    thin orchestrator that calls src/
+slides/slides.html          slides source (rebuild the deck: `make slides`)
 submission/warehouse.duckdb built output, committed per SETUP.md §8 (rebuild: `make pipeline`)
+submission/slides.pdf       presentation deck, committed (built from slides/ via `make slides`)
 ```
