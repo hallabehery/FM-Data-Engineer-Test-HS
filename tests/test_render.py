@@ -177,6 +177,8 @@ def test_focal_node_carries_company_drill_breakdown(con):
     companies = focal["companies"]
     # The focal group carries its drill level (direct companies), summed from curated.edge only.
     assert companies and all(c["gbp_volume"] >= 0 for c in companies)
+    # Each drill entry carries the company's display name (curated-only, no data_mart join).
+    assert all(c["focal_company_name"] for c in companies)
     total = sum(c["gbp_volume"] for c in companies)
     cur = con.execute(
         "SELECT SUM(gbp_volume) FROM curated.edge WHERE focal_group_id = ?", [fg]

@@ -102,8 +102,11 @@ appear in both streams.
 `curated` is the thin, graph-ready layer reporting reads from. It reads **only** from `data_mart`
 (never the reverse), and is a near-passthrough: `node` picks the circle/diamond nodes that
 participate in an edge, and `edge` is a 1:1 projection of `money_flow` into directed `source →
-target` rows. Keeping it a pure projection is what lets a graph tool consume it with no further
-shaping — and lets a test assert equal rows and measures against `money_flow`.
+target` rows. The one enrichment is the drill label: `edge` carries `focal_company_name` beside the
+`focal_company_id` key (joined from the `entity` dimension, still within `data_mart`), so a consumer
+can render the group→company drill straight from `curated` without a further join. Keeping it a pure
+projection is what lets a graph tool consume it with no reshaping — and lets a test assert equal
+rows and measures against `money_flow`.
 
 ## FX transformation
 
@@ -210,13 +213,13 @@ clause away — nothing needs reshaping.
 `make render` proves it: it reads only `curated.node` + `curated.edge`, hands them straight to pyvis,
 and produces [`star_map.html`](star_map.html) with no transformation in between (it picks a focal
 group that visibly connects to other groups, so the circle↔circle structure shows). Hovering the
-focal group even reveals its drill level — the direct companies it rolls up, straight from
-`curated.edge.focal_company_id` — so the hierarchy is visible, not just present in the data. (It's a
-static illustrative snapshot, not a click-to-expand app — that production UI is out of scope.)
+focal group even reveals its drill level — the direct companies it rolls up **by name** (from
+`curated.edge.focal_company_name`) — so the hierarchy is visible, not just present in the data. (It's
+a static illustrative snapshot, not a click-to-expand app — that production UI is out of scope.)
 
 The drill itself is proven in SQL in a separate notebook, [`notebook/drill.ipynb`](../notebook/drill.ipynb):
-it queries Gold directly to show the group-grain star view, resolve the same group down to its named
-direct companies, drill into one company's own counterparts, and confirm the group total is exactly
+using `curated` alone it shows the group-grain star view, resolves the same group down to its named
+direct companies, drills into one company's own counterparts, and confirms the group total is exactly
 the sum of its companies (drill is lossless) — all sliceable by month.
 
 ## Key decisions
@@ -259,7 +262,7 @@ decision had a real alternative, the rejected one is noted.
   group`). Profiling found zero orphans, so no fragile name-matching — counterparties with no key
   are standalone diamonds by design, not errors.
 
-## Assumptions and what would need a question
+## Assumptions
 
 - **Direction** (deposit = inflow, withdrawal = outflow) and the **FX settlement instant** (`Tx Date + Tx Time`; fees at their date) are inferred from the data and documented. 
 

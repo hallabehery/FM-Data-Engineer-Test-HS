@@ -160,6 +160,7 @@ def star_map_frame(
     company_rows = con.execute(
         f"""
         SELECT focal_company_id,
+               ANY_VALUE(focal_company_name) AS focal_company_name,
                SUM(gbp_volume) AS gbp_volume,
                SUM(txn_count)  AS txn_count
         FROM curated.edge
@@ -170,8 +171,8 @@ def star_map_frame(
         params,
     ).fetchall()
     companies = [
-        {"focal_company_id": cid, "gbp_volume": vol, "txn_count": cnt}
-        for cid, vol, cnt in company_rows
+        {"focal_company_id": cid, "focal_company_name": name, "gbp_volume": vol, "txn_count": cnt}
+        for cid, name, vol, cnt in company_rows
     ]
 
     # Nodes = every id on either end of a kept edge, attributes taken verbatim from curated.node.
@@ -226,7 +227,8 @@ def _node_title(node: dict[str, Any], edges: list[dict[str, Any]]) -> str:
             f"Drill level — {len(companies)} direct {noun} transacted:",
         ]
         lines += [
-            f"• {c['focal_company_id']}: £{c['gbp_volume']:,.0f} ({int(c['txn_count'])} txns)"
+            f"• {c['focal_company_name'] or c['focal_company_id']}: "
+            f"£{c['gbp_volume']:,.0f} ({int(c['txn_count'])} txns)"
             for c in companies[:5]
         ]
         if len(companies) > 5:

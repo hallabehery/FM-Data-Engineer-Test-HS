@@ -56,6 +56,25 @@ def test_edges_carry_measures_and_reconcile(con):
 
 
 @SKIP
+def test_edges_carry_focal_company_name_for_drill(con):
+    gold_curated.build_edge(con)
+    # The drill key always carries its label — curated is self-sufficient for group→company drill.
+    assert con.execute(
+        "SELECT COUNT(*) FROM curated.edge WHERE focal_company_name IS NULL"
+    ).fetchone()[0] == 0
+    # And the label matches the company's name in data_mart.entity (1:1, no fan-out).
+    mismatched = con.execute(
+        "SELECT COUNT(*) FROM curated.edge e "
+        "JOIN data_mart.entity en ON en.entity_kind = 'company' AND en.entity_id = e.focal_company_id "
+        "WHERE e.focal_company_name <> en.name"
+    ).fetchone()[0]
+    assert mismatched == 0
+    assert con.execute("SELECT COUNT(*) FROM curated.edge").fetchone()[0] == con.execute(
+        "SELECT COUNT(*) FROM data_mart.money_flow"
+    ).fetchone()[0]
+
+
+@SKIP
 def test_directed_endpoints_reference_nodes(con):
     gold_curated.build_edge(con)
     # inflow = money into the focal group (counterpart -> focal); outflow = focal -> counterpart.
