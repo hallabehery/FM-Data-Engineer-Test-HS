@@ -131,6 +131,26 @@ def star_map_frame(
         keep = {cp for cp, _ in sorted(vol_by_cp.items(), key=lambda kv: kv[1], reverse=True)[:top_n]}
         edges = [e for e in edges if e["counterpart_id"] in keep]
 
+    # Drill level: the focal group's constituent direct companies that transacted in this slice
+    # (`focal_company_id`), summed from curated.edge — still curated-only. Attached to the focal
+    # node so a tooltip can reveal the hierarchy the group rolls up (SPEC drill-down, made visible).
+    company_rows = con.execute(
+        f"""
+        SELECT focal_company_id,
+               SUM(gbp_volume) AS gbp_volume,
+               SUM(txn_count)  AS txn_count
+        FROM curated.edge
+        WHERE {predicate}
+        GROUP BY focal_company_id
+        ORDER BY gbp_volume DESC
+        """,
+        params,
+    ).fetchall()
+    companies = [
+        {"focal_company_id": cid, "gbp_volume": vol, "txn_count": cnt}
+        for cid, vol, cnt in company_rows
+    ]
+
     # Nodes = every id on either end of a kept edge, attributes taken verbatim from curated.node.
     node_ids = {focal_group_id}
     for e in edges:
@@ -146,6 +166,8 @@ def star_map_frame(
         {
             "node_id": nid, "name": name, "node_kind": kind, "node_shape": shape,
             "is_standalone": standalone, "is_focal": nid == focal_group_id,
+            # Only the focal group has a drill level here; counterparts carry no sub-entities.
+            "companies": companies if nid == focal_group_id else None,
         }
         for nid, name, kind, shape, standalone in node_rows
     ]
@@ -158,6 +180,49 @@ def _edge_label(edge: dict[str, Any]) -> str:
         f"£{edge['gbp_volume']:,.0f} · {int(edge['txn_count'])} txns · "
         f"£{edge['gbp_fee_revenue']:,.0f} fee"
     )
+
+
+def _node_title(node: dict[str, Any], edges: list[dict[str, Any]]) -> str:
+    """Build the hover tooltip (HTML) for a node, revealing the drill level where there is one.
+
+    The focal group's tooltip lists its constituent direct companies (the drill level, from
+    `curated.edge.focal_company_id`) with their GBP split; a counterpart's shows its flow with the
+    focal group and — for a standalone diamond — that it is a leaf with no sub-entities.
+    """
+    name = node["name"] or node["node_id"]
+    if node["is_focal"]:
+        inflow = sum(e["gbp_volume"] for e in edges if e["direction"] == "inflow")
+        outflow = sum(e["gbp_volume"] for e in edges if e["direction"] == "outflow")
+        companies = node.get("companies") or []
+        noun = "company" if len(companies) == 1 else "companies"
+        lines = [
+            f"<b>{name}</b>", "Focal group",
+            f"Inflow £{inflow:,.0f} · Outflow £{outflow:,.0f}",
+            f"Drill level — {len(companies)} direct {noun} transacted:",
+        ]
+        lines += [
+            f"• {c['focal_company_id']}: £{c['gbp_volume']:,.0f} ({int(c['txn_count'])} txns)"
+            for c in companies[:5]
+        ]
+        if len(companies) > 5:
+            lines.append(f"• +{len(companies) - 5} more")
+        return "<br>".join(lines)
+
+    cid = node["node_id"]
+    mine = [e for e in edges if e["counterpart_id"] == cid]
+    inflow = sum(e["gbp_volume"] for e in mine if e["direction"] == "inflow")
+    outflow = sum(e["gbp_volume"] for e in mine if e["direction"] == "outflow")
+    txns = sum(int(e["txn_count"]) for e in mine)
+    fee = sum(e["gbp_fee_revenue"] for e in mine)
+    kind = (
+        "Group counterpart" if node["node_shape"] == "circle"
+        else "Standalone counterpart (leaf — no sub-entities)"
+    )
+    return "<br>".join([
+        f"<b>{name}</b>", kind,
+        f"Inflow £{inflow:,.0f} · Outflow £{outflow:,.0f}",
+        f"{txns} txns · £{fee:,.0f} fee",
+    ])
 
 
 def render_star_map(
@@ -173,9 +238,10 @@ def render_star_map(
     """Render one focal group's money-flow network to a self-contained HTML file.
 
     Circles are groups, diamonds are standalone counterparts (the focal group is highlighted);
-    edges are directed and labelled with GBP volume, count and fee revenue. Returns the path of
-    the written HTML. `pyvis` is imported lazily so the rest of the module (and its tests) work
-    without the optional render dependency installed.
+    edges are directed and labelled with GBP volume, count and fee revenue. Hovering a node shows
+    its flow, and hovering the focal group reveals the drill level — the direct companies it rolls
+    up (from `curated.edge`). Returns the path of the written HTML. `pyvis` is imported lazily so
+    the rest of the module (and its tests) work without the optional render dependency installed.
     """
     from pyvis.network import Network  # lazy: optional render-only dependency
 
@@ -194,7 +260,7 @@ def render_star_map(
             shape=_PYVIS_SHAPE.get(n["node_shape"], "dot"),
             color="#e4572e" if focal else ("#4c9f70" if n["node_shape"] == "circle" else "#8896ab"),
             size=32 if focal else 18,
-            title=f"{n['name']} ({n['node_kind']}, {n['node_shape']})",
+            title=_node_title(n, edges),
         )
     for e in edges:
         net.add_edge(

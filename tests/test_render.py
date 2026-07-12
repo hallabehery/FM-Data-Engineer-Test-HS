@@ -154,6 +154,36 @@ def test_driven_only_from_curated(con):
 
 
 @SKIP
+def test_focal_node_carries_company_drill_breakdown(con):
+    fg = render.default_focal_group(con)
+    nodes, _ = render.star_map_frame(con, fg, top_n=None)
+    focal = next(n for n in nodes if n["is_focal"])
+    companies = focal["companies"]
+    # The focal group carries its drill level (direct companies), summed from curated.edge only.
+    assert companies and all(c["gbp_volume"] >= 0 for c in companies)
+    total = sum(c["gbp_volume"] for c in companies)
+    cur = con.execute(
+        "SELECT SUM(gbp_volume) FROM curated.edge WHERE focal_group_id = ?", [fg]
+    ).fetchone()[0]
+    assert abs(total - cur) < 1e-3  # the breakdown reconciles to the group's total
+    # Counterparts (circles or diamonds) have no drill level here — they carry no sub-entities.
+    assert all(n["companies"] is None for n in nodes if not n["is_focal"])
+
+
+@SKIP
+def test_node_tooltip_reveals_drill_level(con):
+    fg = render.default_focal_group(con)
+    nodes, edges = render.star_map_frame(con, fg, top_n=None)
+    focal = next(n for n in nodes if n["is_focal"])
+    title = render._node_title(focal, edges)
+    assert "Drill level" in title and "direct" in title
+    # A standalone diamond is flagged as a leaf with nothing beneath it.
+    diamond = next((n for n in nodes if n["node_shape"] == "diamond"), None)
+    if diamond is not None:
+        assert "leaf" in render._node_title(diamond, edges)
+
+
+@SKIP
 def test_render_star_map_writes_self_contained_html(con, tmp_path):
     pytest.importorskip("pyvis")
     out = render.render_star_map(con, top_n=5, out_path=tmp_path / "star_map.html")
@@ -162,3 +192,5 @@ def test_render_star_map_writes_self_contained_html(con, tmp_path):
     # Self-contained (inlined vis.js, no external fetch) and carries at least one edge label.
     assert "vis-network" in html or "vis.min.js" in html
     assert "txns" in html
+    # The drill level is surfaced in the focal group's tooltip.
+    assert "Drill level" in html

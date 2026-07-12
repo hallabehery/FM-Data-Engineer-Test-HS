@@ -208,7 +208,10 @@ down to the entity that actually transacted and roll back up. Any focal group an
 clause away — nothing needs reshaping.
 
 `make render` proves it: it reads only `curated.node` + `curated.edge`, hands them straight to pyvis,
-and produces [`star_map.html`](star_map.html) with no transformation in between.
+and produces [`star_map.html`](star_map.html) with no transformation in between. Hovering the focal
+group even reveals its drill level — the direct companies it rolls up, straight from
+`curated.edge.focal_company_id` — so the hierarchy is visible, not just present in the data. (It's a
+static illustrative snapshot, not a click-to-expand app — that production UI is out of scope.)
 
 ## Key decisions
 
