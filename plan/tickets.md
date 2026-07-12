@@ -25,7 +25,7 @@ fact. (This supersedes the earlier approach that put `fx_rate`/`fx_rate_id` on `
 |---|---|---|
 | **bronze.raw** | `deposit_2025_07 … _12`, `withdrawal_2025_07 … _12` | raw per-month landings, values as-is |
 | **bronze.live** | `deposit`, `withdrawal`, `counterparty`, `fee` | consolidated / landed; **the facts live here (one place)** |
-| **silver.core** | dims: `company`, `corporate_group`, `counterparty`, `exchange_rate` | unpicked / cleaned reference data |
+| **silver.core** | dims: `company`, `corporate_group`, `exchange_rate` | unpicked / cleaned reference data (counterparty needs no Silver transformation — it stays in `bronze.live` and is resolved in Gold `entity`) |
 | | FX match (bridge): `deposit_fx`, `withdrawal_fx`, `fee_fx` | as-of result per `live` fact: `key, fx_instant_ms, fx_rate_id, fx_rate, fx_quarantine_reason` |
 | **silver.shape** | `deposit`, `withdrawal`, `fee` (GBP-normalised) | fact ⨝ its `*_fx` → `gbp_amount`; unresolved quarantined; entity attributes resolved |
 | **gold.data_mart** | `entity` (+`source`), `money_flow` (+`source`) | counterpart→group resolution; `focal_group × focal_company × counterpart × direction × month` measures (finest grain; group view rolls up) |
@@ -246,19 +246,26 @@ layer's invariant, then asserts the end-to-end row spine (12,982 transactions ne
 measure spine (Silver → `money_flow` → `curated.edge`), and the quarantine ledger (42 null-currency fees
 → `fx_missing_currency`). Runs under the existing `make test` / `make all`.
 
-## Reconciliation against the reference snapshot
+## ~~Reconciliation against the reference snapshot~~ ⛔ CLOSED — not implementable (#15)
 
-**What to build:** A check that the final `curated` nodes/edges for a known focal group and period
+**Closure note:** `star_map_snapshot.png` is from a **different data drop** — its figures don't
+exist in this data, so it cannot serve as a golden reconciliation target (confirmed in #15). The
+snapshot is treated as illustrative of *shape* only (node types, edge direction, label format),
+not of numbers, and this is recorded as the one open stakeholder question in
+`submission/WRITEUP.md` § Assumptions. The originally planned check below is kept for the record;
+it is unfulfillable, not undone work.
+
+**What to build:** ~~A check that the final `curated` nodes/edges for a known focal group and period
 reproduce the figures in `star_map_snapshot.png` — the single highest-value seam, pending confirmation
-from the data-team lead that those figures are a validated golden reference.
+from the data-team lead that those figures are a validated golden reference.~~
 
-**Blocked by:** Gold `curated` — directed edges, slicing & drill.
+**Blocked by:** ~~Gold `curated` — directed edges, slicing & drill~~ (moot — ticket closed).
 
-- [ ] A focal group + period is reconciled against the snapshot's named-edge figures
-- [ ] Volume and transaction count match for at least one named edge (within a documented tolerance)
-- [ ] Any dependency on unconfirmed "golden" status is stated explicitly
+- ~~A focal group + period is reconciled against the snapshot's named-edge figures~~
+- ~~Volume and transaction count match for at least one named edge (within a documented tolerance)~~
+- ~~Any dependency on unconfirmed "golden" status is stated explicitly~~
 
-## Illustrative network render (optional proof)
+## ~~Illustrative network render (optional proof)~~ ✅ DONE (`feature/illustrative-render`, #16)
 
 **What to build:** A single illustrative render of the curated network for a focal group and period,
 proving the Gold output drives a graph with no further transformation. Optional proof, not the
@@ -266,20 +273,29 @@ deliverable.
 
 **Blocked by:** Gold `curated` — directed edges, slicing & drill.
 
-- [ ] One render (e.g. pyvis/networkx) shows the focal group, circle/diamond nodes, and directed edges
-- [ ] Edge labels show GBP volume, count and fee revenue
-- [ ] Driven directly from `curated` with no extra shaping
+- [x] One render (e.g. pyvis/networkx) shows the focal group, circle/diamond nodes, and directed edges
+- [x] Edge labels show GBP volume, count and fee revenue
+- [x] Driven directly from `curated` with no extra shaping
 
-## `WRITEUP.md` — documentation deliverable
+Delivered as `src/render.py` (`make render` → `submission/star_map.html`): reads only
+`curated.node` + `curated.edge`, picks a group-connected focal so the circle↔circle structure
+shows, and the focal tooltip reveals the drill level (direct companies by name).
+
+## ~~`WRITEUP.md` — documentation deliverable~~ ✅ DONE (`feature/writeup`, #17)
 
 **What to build:** The written record that lets a reviewer trust the pipeline without reading all the
 code: the FX approach, layer-boundary rationale, each transformation's reasoning, the data-quality
 decisions, the live-stream ingestion strategy, and how Gold satisfies the network deliverable.
 
-**Blocked by:** Gold `curated` — directed edges, slicing & drill; Consolidated conservation test suite; Reconciliation against the reference snapshot.
+**Blocked by:** Gold `curated` — directed edges, slicing & drill; Consolidated conservation test suite;
+~~Reconciliation against the reference snapshot~~ (closed not-implementable, #15 — the snapshot's
+non-golden status is recorded in the write-up's Assumptions instead).
 
-- [ ] FX approach documented (as-of match, quarantine policy, GBP special case)
-- [ ] Layer boundaries explained — what went in Bronze vs Silver vs Gold, and why
-- [ ] Data-quality issues classified dropped / quarantined / kept, with reasons
-- [ ] Live-stream ingestion strategy described (strategy only, not implemented)
-- [ ] Explains how the Gold output satisfies the relationship-network deliverable
+- [x] FX approach documented (as-of match, quarantine policy, GBP special case)
+- [x] Layer boundaries explained — what went in Bronze vs Silver vs Gold, and why
+- [x] Data-quality issues classified dropped / quarantined / kept, with reasons
+- [x] Live-stream ingestion strategy described (strategy only, not implemented)
+- [x] Explains how the Gold output satisfies the relationship-network deliverable
+
+Delivered as `submission/WRITEUP.md`, with `tests/test_writeup.py` as a completeness tripwire —
+each acceptance bullet above maps to a required topic the test asserts is still present.
