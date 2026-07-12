@@ -81,7 +81,9 @@ break ingestion), and — after asserting each fact's business key is unique —
 or missing currency, out-of-coverage instant, or a null amount) is split off into a parallel
 per-stream quarantine table — `shape.deposit_quarantine` / `withdrawal_quarantine` /
 `fee_quarantine` — carrying its `quarantine_reason`, so the excluded rows are kept and inspectable
-rather than dropped.
+rather than dropped. Those quarantine tables are **terminal**: Gold reads only the promoted facts,
+so an un-priceable row is never silently carried into the network product — it stops at Silver as
+an auditable record.
 
 Splitting FX across the two schemas is intentional: `core` *selects* the rate, `shape` *applies*
 it. That separates the two ways FX can go wrong — the wrong rate chosen versus the wrong
