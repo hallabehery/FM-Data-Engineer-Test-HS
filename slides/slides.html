@@ -301,7 +301,34 @@
   <div class="footer"><span>Freemarket relationship network</span><span>9</span></div>
 </section>
 
-<!-- 10 · Trust & next -->
+<!-- 10 · AI workflow -->
+<section class="slide">
+  <div class="kicker">How it was built · working AI-first</div>
+  <h2>Spec first, ticket-sized sessions, every merge review-gated</h2>
+  <div class="cols" style="gap:36px">
+    <div class="col" style="flex:1.15">
+      <ul class="steps">
+        <li><span class="stepnum">1</span><p><strong>Grill the brief.</strong> Before any code, the agent interrogates README, BRIEF and the team's working notes until every requirement, constraint and open question is explicit.</p></li>
+        <li><span class="stepnum">2</span><p><strong>Turn it into a spec</strong> (<code>/to-spec</code>): <code>plan/SPEC.md</code> with the problem, 23 user stories, decisions with rejected alternatives, and testing seams.</p></li>
+        <li><span class="stepnum">3</span><p><strong>Break it into tickets</strong> (<code>/to-tickets</code>): sequenced GitHub issues with acceptance criteria and blockers; always work the frontier of unblocked tickets.</p></li>
+        <li><span class="stepnum">4</span><p><strong>Implement, one session per ticket</strong> (<code>/implement</code>): a feature branch each, tests written with the layer they gate.</p></li>
+        <li><span class="stepnum">5</span><p><strong>Review before merge</strong> (<code>/code-review</code>): independent reviewer agents per PR, on two axes: repo standards, and fidelity to the ticket. I rule on every finding; nothing merges unreviewed.</p></li>
+      </ul>
+    </div>
+    <div class="col panel" style="flex:0.85">
+      <h3>What that looked like here</h3>
+      <ul class="tick" style="font-size:16.5px">
+        <li><strong>25 merged PRs, 22 closed issues, 80 commits</strong>, every one traceable to a ticket with acceptance criteria</li>
+        <li>The reviews earned their keep: a fact-check agent verified every figure in this deck against the committed warehouse, and caught a wrong drill number before submission</li>
+        <li>The agents do the labour; <strong>I own the decisions, the review verdicts, and every merge</strong></li>
+      </ul>
+      <p style="font-size:13.5px; margin-top:14px" class="muted">Method: the AI Hero engineering skills (grilling → to-spec → to-tickets → implement → code-review), aihero.dev/skills.</p>
+    </div>
+  </div>
+  <div class="footer"><span>Freemarket relationship network</span><span>10</span></div>
+</section>
+
+<!-- 11 · Trust & next -->
 <section class="slide">
   <div class="kicker">Why you can trust it, and what's next</div>
   <h2>Reproducible by construction, honest about the one unknown</h2>
@@ -327,7 +354,7 @@
       </ul>
     </div>
   </div>
-  <div class="footer"><span>Freemarket relationship network</span><span>10</span></div>
+  <div class="footer"><span>Freemarket relationship network</span><span>11</span></div>
 </section>
 
 </body>
